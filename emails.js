@@ -2,7 +2,7 @@ const { Resend } = require('resend');
 const db = require('./db');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = 'quiniela@insuranceusa.us'; // cambiar si tienes dominio verificado en Resend
+const FROM_EMAIL = 'onboarding@resend.dev';
 const FROM_NAME = 'Quiniela Insurance USA 2026';
 
 function getAllUserEmails() {
