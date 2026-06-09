@@ -295,19 +295,17 @@
 
     <!-- TABLA PÚBLICA visible sin login -->
     <div class="card" style="margin-bottom:20px;">
-      <h2 onclick="toggleTablaPublica()" style="justify-content:center;text-align:center;cursor:pointer;user-select:none;">
-        🏆 Tabla de Posiciones en Vivo <span id="tablaToggleIcon" style="font-size:0.9rem;margin-left:6px;">▼</span>
-      </h2>
-      <div id="tablaPublicaBody" style="display:none;">
-        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-          <span class="puntos-tag tag-exacto" style="font-size:0.9rem;padding:8px 18px;">🎯 3 pts — Exacto</span>
-          <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;font-size:0.9rem;padding:8px 18px;">🤝 2 pts — Empate</span>
-          <span class="puntos-tag tag-ganador" style="font-size:0.9rem;padding:8px 18px;">✓ 1 pt — Ganador</span>
-        </div>
-        <div class="tabla-container" id="tablaPublicaContainer"></div>
-        <div style="text-align:center;margin-top:14px;">
-          <button class="btn btn-primary" onclick="switchAuthTab('register')">⚽ ¡Registrarme y participar!</button>
-        </div>
+      <h2 style="justify-content:center;text-align:center;">🏆 Tabla de Posiciones en Vivo</h2>
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+        <span class="puntos-tag tag-exacto" style="font-size:0.9rem;padding:8px 18px;">🎯 3 pts — Exacto</span>
+        <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;font-size:0.9rem;padding:8px 18px;">🤝 2 pts — Empate</span>
+        <span class="puntos-tag tag-ganador" style="font-size:0.9rem;padding:8px 18px;">✓ 1 pt — Ganador</span>
+      </div>
+      <div class="tabla-container" id="tablaPublicaContainer">
+        <div class="loading" style="padding:20px;color:var(--text-light);">Cargando tabla...</div>
+      </div>
+      <div style="text-align:center;margin-top:14px;">
+        <button class="btn btn-primary" onclick="switchAuthTab('register')">⚽ ¡Registrarme y participar!</button>
       </div>
     </div>
 
@@ -526,6 +524,7 @@ async function init() {
   currentUser = me;
   updateNav(me);
   loadConfig();
+  loadTablaPublica();
   if (me.loggedIn) {
     showSection('predicciones');
   } else {
