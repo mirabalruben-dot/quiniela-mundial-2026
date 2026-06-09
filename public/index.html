@@ -725,13 +725,21 @@ async function loadPredicciones() {
   document.getElementById('predLoginMsg').style.display = 'none';
   document.getElementById('predContent').style.display = '';
 
-  const [partidos, predicciones] = await Promise.all([api('/api/partidos'), api('/api/predicciones')]);
-  todosPartidos = partidos;
-  misPredicciones = {};
-  predicciones.forEach(p => { misPredicciones[p.partido_id] = p; });
-  cambiosPendientes = {};
+  try {
+    const [partidos, predicciones] = await Promise.all([api('/api/partidos'), api('/api/predicciones')]);
+    todosPartidos = partidos;
+    misPredicciones = {};
+    predicciones.forEach(p => { misPredicciones[p.partido_id] = p; });
+    cambiosPendientes = {};
 
-  renderPartidos(partidos);
+    if (!partidos || partidos.length === 0) {
+      document.getElementById('partidosContainer').innerHTML = '<div class="alert alert-info">⏳ Cargando partidos del Mundial 2026... intenta de nuevo en unos segundos.</div>';
+      return;
+    }
+    renderPartidos(partidos);
+  } catch(e) {
+    document.getElementById('partidosContainer').innerHTML = '<div class="alert alert-error">❌ Error cargando partidos. Recarga la página.</div>';
+  }
 }
 
 function renderPartidos(partidos) {

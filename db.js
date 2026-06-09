@@ -63,12 +63,12 @@ insertConfig.run('puntos_resultado_exacto', '3');
 insertConfig.run('puntos_empate_correcto', '2');
 insertConfig.run('puntos_ganador_correcto', '1');
 
-// Resetear partidos si no tienen el estadio correcto (migración)
-const checkPartido = db.prepare("SELECT estadio FROM partidos WHERE equipo_local='México' LIMIT 1").get();
-if (checkPartido && !checkPartido.estadio.includes('Ciudad de México')) {
+// Migración: verificar que los partidos son los correctos (por estadio)
+const checkPartido = db.prepare("SELECT estadio FROM partidos WHERE id=1").get();
+if (checkPartido && !checkPartido.estadio.includes('Azteca')) {
   db.prepare('DELETE FROM predicciones').run();
   db.prepare('DELETE FROM partidos').run();
-  console.log('Migración: partidos incorrectos eliminados, insertando calendario oficial FIFA 2026');
+  console.log('Migración: partidos incorrectos eliminados');
 }
 
 // Agregar eliminatorias si faltan
