@@ -14,7 +14,11 @@ app.use(session({
   secret: 'quiniela-mundial-2026-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    sameSite: 'none',
+    secure: true
+  }
 }));
 
 const requireAuth = (req, res, next) => {
