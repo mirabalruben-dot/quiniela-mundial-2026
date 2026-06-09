@@ -75,24 +75,11 @@ insertConfig.run('puntos_ganador_correcto', '1');
 // Migración: agregar columna numero si no existe
 try { db.prepare('ALTER TABLE partidos ADD COLUMN numero INTEGER').run(); } catch(e) {}
 
-// Migración: recrear si M15 tiene fecha incorrecta (debe ser 06-15)
-const checkHora = db.prepare("SELECT fecha FROM partidos WHERE numero=15").get();
-if (checkHora && !checkHora.fecha.includes('06-15')) {
-  db.prepare('DELETE FROM predicciones').run();
-  db.prepare('DELETE FROM partidos').run();
-  try { db.prepare("DELETE FROM sqlite_sequence WHERE name='partidos'").run(); } catch(e) {}
-  console.log('Migración: corrigiendo horarios oficiales FIFA');
-}
+// ⚠️ MIGRACIONES DESTRUCTIVAS DESACTIVADAS — calendario correcto desde 10 junio 2026
+// NO borrar predicciones en futuros deploys — los datos de usuarios son permanentes
 
-// Migración: recrear partidos si no tienen número (solo si hay partidos sin número)
-const sinNumero = db.prepare("SELECT COUNT(*) as c FROM partidos WHERE numero IS NULL").get();
-if (sinNumero.c > 0) {
-  db.prepare('DELETE FROM predicciones').run();
-  db.prepare('DELETE FROM partidos').run();
-  // Reset autoincrement para que IDs empiecen desde 1
-  try { db.prepare("DELETE FROM sqlite_sequence WHERE name='partidos'").run(); } catch(e) {}
-  console.log('Migración: recreando todos los partidos con números oficiales FIFA');
-}
+// Solo insertar partidos si la tabla está completamente vacía (primera instalación)
+// NUNCA borrar predicciones existentes
 
 // Recrear eliminatorias si tienen datos viejos
 const checkElim = db.prepare("SELECT equipo_local, fecha FROM partidos WHERE fase='Ronda de 32' LIMIT 1").get();
