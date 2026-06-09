@@ -867,8 +867,10 @@ function esPendienteEquipo(p) {
 function formatFecha(fecha) {
   if (!fecha) return '';
   const meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const [y, m, d] = fecha.split('-');
-  return `${parseInt(d)} ${meses[parseInt(m)]}`;
+  const partes = fecha.split(' ');
+  const [y, m, d] = partes[0].split('-');
+  const hora = partes[1] ? ` · ${partes[1]} ET` : '';
+  return `${parseInt(d)} ${meses[parseInt(m)]}${hora}`;
 }
 
 function mostrarFase(fase) {

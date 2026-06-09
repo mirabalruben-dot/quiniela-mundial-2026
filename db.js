@@ -71,44 +71,85 @@ if (checkPartido && !checkPartido.estadio.includes('Azteca')) {
   console.log('Migración: partidos incorrectos eliminados');
 }
 
-// Agregar eliminatorias si faltan
+// Recrear eliminatorias si tienen datos viejos o faltan
+const checkElim = db.prepare("SELECT equipo_local FROM partidos WHERE fase='Ronda de 32' LIMIT 1").get();
+if (checkElim && checkElim.equipo_local.includes('1ro Grupo A')) {
+  db.prepare("DELETE FROM partidos WHERE fase != 'Grupos'").run();
+  console.log('Eliminatorias viejas borradas, recreando con datos oficiales FIFA');
+}
 const countEliminatorias = db.prepare("SELECT COUNT(*) as c FROM partidos WHERE fase != 'Grupos'").get();
 if (countEliminatorias.c === 0) {
   console.log('Agregando partidos eliminatorios...');
   const ie = db.prepare('INSERT INTO partidos (fase,grupo,equipo_local,equipo_visitante,fecha,estadio) VALUES (?,?,?,?,?,?)');
   const elims = [
-    ['Ronda de 32',null,'1ro Grupo A','2do Grupo C','2026-06-28','AT&T Stadium - Dallas'],
-    ['Ronda de 32',null,'1ro Grupo C','2do Grupo A','2026-06-28','Lumen Field - Seattle'],
-    ['Ronda de 32',null,'1ro Grupo B','3ro Grupo','2026-06-28','MetLife Stadium - Nueva York'],
-    ['Ronda de 32',null,'1ro Grupo D','2do Grupo B','2026-06-29','SoFi Stadium - Los Ángeles'],
-    ['Ronda de 32',null,'1ro Grupo E','3ro Grupo','2026-06-29','Hard Rock Stadium - Miami'],
-    ['Ronda de 32',null,'1ro Grupo F','2do Grupo E','2026-06-29','Mercedes-Benz Stadium - Atlanta'],
-    ['Ronda de 32',null,'1ro Grupo G','2do Grupo H','2026-06-30','Estadio Azteca - Ciudad de México'],
-    ['Ronda de 32',null,'1ro Grupo H','2do Grupo G','2026-06-30','Arrowhead Stadium - Kansas City'],
-    ['Ronda de 32',null,'1ro Grupo I','3ro Grupo','2026-06-30','NRG Stadium - Houston'],
-    ['Ronda de 32',null,'1ro Grupo J','2do Grupo I','2026-07-01','Gillette Stadium - Boston'],
-    ['Ronda de 32',null,'1ro Grupo K','3ro Grupo','2026-07-01','BMO Field - Toronto'],
-    ['Ronda de 32',null,'1ro Grupo L','2do Grupo K','2026-07-01','Lincoln Financial Field - Filadelfia'],
-    ['Ronda de 32',null,'2do Grupo D','3ro Grupo','2026-07-02','BC Place - Vancouver'],
-    ['Ronda de 32',null,'2do Grupo F','3ro Grupo','2026-07-02','Estadio BBVA - Monterrey'],
-    ['Ronda de 32',null,'2do Grupo J','3ro Grupo','2026-07-02','Estadio Akron - Guadalajara'],
-    ['Ronda de 32',null,'2do Grupo L','3ro Grupo','2026-07-02','Levi\'s Stadium - San Francisco'],
-    ['Octavos de Final',null,'Ganador R32-1','Ganador R32-2','2026-07-04','MetLife Stadium - Nueva York'],
-    ['Octavos de Final',null,'Ganador R32-3','Ganador R32-4','2026-07-04','AT&T Stadium - Dallas'],
-    ['Octavos de Final',null,'Ganador R32-5','Ganador R32-6','2026-07-05','SoFi Stadium - Los Ángeles'],
-    ['Octavos de Final',null,'Ganador R32-7','Ganador R32-8','2026-07-05','Mercedes-Benz Stadium - Atlanta'],
-    ['Octavos de Final',null,'Ganador R32-9','Ganador R32-10','2026-07-06','Hard Rock Stadium - Miami'],
-    ['Octavos de Final',null,'Ganador R32-11','Ganador R32-12','2026-07-06','Estadio Azteca - Ciudad de México'],
-    ['Octavos de Final',null,'Ganador R32-13','Ganador R32-14','2026-07-07','Lumen Field - Seattle'],
-    ['Octavos de Final',null,'Ganador R32-15','Ganador R32-16','2026-07-07','NRG Stadium - Houston'],
-    ['Cuartos de Final',null,'Ganador OF-1','Ganador OF-2','2026-07-10','MetLife Stadium - Nueva York'],
-    ['Cuartos de Final',null,'Ganador OF-3','Ganador OF-4','2026-07-10','AT&T Stadium - Dallas'],
-    ['Cuartos de Final',null,'Ganador OF-5','Ganador OF-6','2026-07-11','SoFi Stadium - Los Ángeles'],
-    ['Cuartos de Final',null,'Ganador OF-7','Ganador OF-8','2026-07-11','Mercedes-Benz Stadium - Atlanta'],
-    ['Semifinales',null,'Ganador CF-1','Ganador CF-2','2026-07-14','MetLife Stadium - Nueva York'],
-    ['Semifinales',null,'Ganador CF-3','Ganador CF-4','2026-07-15','AT&T Stadium - Dallas'],
-    ['Tercer Lugar',null,'Perdedor SF-1','Perdedor SF-2','2026-07-18','Hard Rock Stadium - Miami'],
-    ['Final',null,'Ganador SF-1','Ganador SF-2','2026-07-19','MetLife Stadium - Nueva York'],
+    // RONDA DE 32 — cruces oficiales FIFA
+    // M73: 2do A vs 2do B — Jun 28, 12:00 PM PT
+    ['Ronda de 32',null,'2do Grupo A','2do Grupo B','2026-06-28 15:00','SoFi Stadium - Los Ángeles'],
+    // M74: 1ro E vs 3ro (A/B/C/D/F) — Jun 29, 4:30 PM ET
+    ['Ronda de 32',null,'1ro Grupo E','3er Clasificado','2026-06-29 16:30','Gillette Stadium - Boston'],
+    // M75: 1ro F vs 2do C — Jun 29, 7:00 PM CT
+    ['Ronda de 32',null,'1ro Grupo F','2do Grupo C','2026-06-29 19:00','Estadio BBVA - Monterrey'],
+    // M76: 1ro C vs 2do F — Jun 29, 12:00 PM ET
+    ['Ronda de 32',null,'1ro Grupo C','2do Grupo F','2026-06-29 12:00','NRG Stadium - Houston'],
+    // M77: 1ro I vs 3ro (C/D/F/G/H) — Jun 30, 5:00 PM ET
+    ['Ronda de 32',null,'1ro Grupo I','3er Clasificado','2026-06-30 17:00','MetLife Stadium - Nueva York/Nueva Jersey'],
+    // M78: 2do E vs 2do I — Jun 30, 12:00 PM ET
+    ['Ronda de 32',null,'2do Grupo E','2do Grupo I','2026-06-30 12:00','AT&T Stadium - Dallas'],
+    // M79: 1ro A vs 3ro (C/E/F/H/I) — Jun 30, 7:00 PM CT
+    ['Ronda de 32',null,'1ro Grupo A','3er Clasificado','2026-06-30 19:00','Estadio Azteca - Ciudad de México'],
+    // M80: 1ro L vs 3ro (E/H/I/J/K) — Jul 1, 12:00 PM ET
+    ['Ronda de 32',null,'1ro Grupo L','3er Clasificado','2026-07-01 12:00','Mercedes-Benz Stadium - Atlanta'],
+    // M81: 1ro D vs 3ro (B/E/F/I/J) — Jul 1, 5:00 PM PT
+    ['Ronda de 32',null,'1ro Grupo D','3er Clasificado','2026-07-01 17:00','Levi\'s Stadium - San Francisco'],
+    // M82: 1ro G vs 3ro (A/E/H/I/J) — Jul 1, 1:00 PM PT
+    ['Ronda de 32',null,'1ro Grupo G','3er Clasificado','2026-07-01 13:00','Lumen Field - Seattle'],
+    // M83: 2do K vs 2do L — Jul 2, 7:00 PM ET
+    ['Ronda de 32',null,'2do Grupo K','2do Grupo L','2026-07-02 19:00','BMO Field - Toronto'],
+    // M84: 1ro H vs 2do J — Jul 2, 12:00 PM PT
+    ['Ronda de 32',null,'1ro Grupo H','2do Grupo J','2026-07-02 12:00','SoFi Stadium - Los Ángeles'],
+    // M85: 1ro B vs 3ro (E/F/G/I/J) — Jul 2, 8:00 PM PT
+    ['Ronda de 32',null,'1ro Grupo B','3er Clasificado','2026-07-02 20:00','BC Place - Vancouver'],
+    // M86: 1ro J vs 2do H — Jul 3, 6:00 PM ET
+    ['Ronda de 32',null,'1ro Grupo J','2do Grupo H','2026-07-03 18:00','Hard Rock Stadium - Miami'],
+    // M87: 1ro K vs 3ro (D/E/I/J/L) — Jul 3, 8:30 PM ET
+    ['Ronda de 32',null,'1ro Grupo K','3er Clasificado','2026-07-03 20:30','Arrowhead Stadium - Kansas City'],
+    // M88: 2do D vs 2do G — Jul 3, 1:00 PM ET
+    ['Ronda de 32',null,'2do Grupo D','2do Grupo G','2026-07-03 13:00','AT&T Stadium - Dallas'],
+    // OCTAVOS DE FINAL
+    // M89: G(74) vs G(77) — Jul 4, 5:00 PM ET
+    ['Octavos de Final',null,'Ganador M74','Ganador M77','2026-07-04 17:00','Lincoln Financial Field - Filadelfia'],
+    // M90: G(73) vs G(75) — Jul 4, 12:00 PM ET
+    ['Octavos de Final',null,'Ganador M73','Ganador M75','2026-07-04 12:00','NRG Stadium - Houston'],
+    // M91: G(76) vs G(78) — Jul 5, 4:00 PM ET
+    ['Octavos de Final',null,'Ganador M76','Ganador M78','2026-07-05 16:00','MetLife Stadium - Nueva York/Nueva Jersey'],
+    // M92: G(79) vs G(80) — Jul 5, 6:00 PM CT
+    ['Octavos de Final',null,'Ganador M79','Ganador M80','2026-07-05 18:00','Estadio Azteca - Ciudad de México'],
+    // M93: G(83) vs G(84) — Jul 6, 2:00 PM ET
+    ['Octavos de Final',null,'Ganador M83','Ganador M84','2026-07-06 14:00','AT&T Stadium - Dallas'],
+    // M94: G(81) vs G(82) — Jul 6, 5:00 PM PT
+    ['Octavos de Final',null,'Ganador M81','Ganador M82','2026-07-06 17:00','Lumen Field - Seattle'],
+    // M95: G(86) vs G(88) — Jul 7, 12:00 PM ET
+    ['Octavos de Final',null,'Ganador M86','Ganador M88','2026-07-07 12:00','Mercedes-Benz Stadium - Atlanta'],
+    // M96: G(85) vs G(87) — Jul 7, 1:00 PM PT
+    ['Octavos de Final',null,'Ganador M85','Ganador M87','2026-07-07 13:00','BC Place - Vancouver'],
+    // CUARTOS DE FINAL
+    // M97: G(89) vs G(90) — Jul 9, 4:00 PM ET
+    ['Cuartos de Final',null,'Ganador M89','Ganador M90','2026-07-09 16:00','Gillette Stadium - Boston'],
+    // M98: G(93) vs G(94) — Jul 10, 12:00 PM PT
+    ['Cuartos de Final',null,'Ganador M93','Ganador M94','2026-07-10 12:00','SoFi Stadium - Los Ángeles'],
+    // M99: G(91) vs G(92) — Jul 11, 5:00 PM ET
+    ['Cuartos de Final',null,'Ganador M91','Ganador M92','2026-07-11 17:00','Hard Rock Stadium - Miami'],
+    // M100: G(95) vs G(96) — Jul 11, 8:00 PM ET
+    ['Cuartos de Final',null,'Ganador M95','Ganador M96','2026-07-11 20:00','Arrowhead Stadium - Kansas City'],
+    // SEMIFINALES
+    // M101: G(97) vs G(98) — Jul 14, 2:00 PM ET
+    ['Semifinales',null,'Ganador M97','Ganador M98','2026-07-14 14:00','AT&T Stadium - Dallas'],
+    // M102: G(99) vs G(100) — Jul 15, 3:00 PM ET
+    ['Semifinales',null,'Ganador M99','Ganador M100','2026-07-15 15:00','Mercedes-Benz Stadium - Atlanta'],
+    // TERCER LUGAR — Jul 18, 5:00 PM ET
+    ['Tercer Lugar',null,'Perdedor M101','Perdedor M102','2026-07-18 17:00','Hard Rock Stadium - Miami'],
+    // FINAL — Jul 19, 3:00 PM ET
+    ['Final',null,'Ganador M101','Ganador M102','2026-07-19 15:00','MetLife Stadium - Nueva York/Nueva Jersey'],
   ];
   for (const p of elims) ie.run(...p);
   console.log(`${elims.length} partidos eliminatorios agregados`);
