@@ -293,19 +293,24 @@
   <!-- AUTH SECTION -->
   <div class="section active" id="section-auth">
 
-    <!-- TABLA PÚBLICA visible sin login -->
-    <div class="card" style="margin-bottom:20px;">
-      <h2 style="justify-content:center;text-align:center;">🏆 Tabla de Posiciones en Vivo</h2>
-      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-        <span class="puntos-tag tag-exacto" style="font-size:0.9rem;padding:8px 18px;">🎯 3 pts — Exacto</span>
-        <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;font-size:0.9rem;padding:8px 18px;">🤝 2 pts — Empate</span>
-        <span class="puntos-tag tag-ganador" style="font-size:0.9rem;padding:8px 18px;">✓ 1 pt — Ganador</span>
+    <!-- TABLA PÚBLICA colapsable -->
+    <div class="card" style="margin-bottom:20px;padding:0;overflow:hidden;">
+      <!-- Cabecera clickeable -->
+      <div onclick="toggleTablaPublica()" style="cursor:pointer;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;background:#f8faff;border-bottom:1.5px solid var(--border);">
+        <span style="font-weight:800;font-size:1rem;color:var(--verde-dark);">🏆 Tabla de Posiciones en Vivo</span>
+        <span id="tablaToggleIcon" style="font-size:0.82rem;color:var(--text-light);font-weight:600;">▼ Ver posiciones</span>
       </div>
-      <div class="tabla-container" id="tablaPublicaContainer">
-        <div class="loading" style="padding:20px;color:var(--text-light);">Cargando tabla...</div>
-      </div>
-      <div style="text-align:center;margin-top:14px;">
-        <button class="btn btn-primary" onclick="switchAuthTab('register')">⚽ ¡Registrarme y participar!</button>
+      <!-- Contenido colapsable — oculto por defecto -->
+      <div id="tablaPublicaBody" style="display:none;padding:20px 24px;">
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <span class="puntos-tag tag-exacto" style="font-size:0.9rem;padding:8px 18px;">🎯 3 pts — Exacto</span>
+          <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;font-size:0.9rem;padding:8px 18px;">🤝 2 pts — Empate</span>
+          <span class="puntos-tag tag-ganador" style="font-size:0.9rem;padding:8px 18px;">✓ 1 pt — Ganador</span>
+        </div>
+        <div class="tabla-container" id="tablaPublicaContainer"></div>
+        <div style="text-align:center;margin-top:14px;">
+          <button class="btn btn-primary" onclick="switchAuthTab('register')">⚽ ¡Registrarme y participar!</button>
+        </div>
       </div>
     </div>
 
@@ -566,7 +571,7 @@ function toggleTablaPublica() {
   const icon = document.getElementById('tablaToggleIcon');
   const abierta = body.style.display === 'none';
   body.style.display = abierta ? '' : 'none';
-  icon.textContent = abierta ? '▲' : '▼';
+  icon.textContent = abierta ? '▲ Ocultar' : '▼ Ver posiciones';
   if (abierta) loadTablaPublica();
 }
 
