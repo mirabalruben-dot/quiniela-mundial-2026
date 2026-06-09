@@ -659,7 +659,7 @@ async function loadTablaPublica() {
   }
   let html = `<table>
     <thead><tr>
-      <th>#</th><th>Apodo</th><th>Puntos</th><th>🎯 Exactos</th><th>✓ Ganador</th>
+      <th>#</th><th>Apodo</th><th>Puntos</th><th>🎯 Exacto</th><th>🤝 Empate</th><th>✓ Ganador</th>
     </tr></thead><tbody>`;
   tabla.forEach((u, i) => {
     const posClass = u.posicion <= 3 ? `pos-${u.posicion}` : 'pos-other';
@@ -669,6 +669,7 @@ async function loadTablaPublica() {
       <td><strong>${medal} ${u.apodo || u.nombre}</strong></td>
       <td><span class="puntos-badge">${u.puntos_total}</span></td>
       <td>${u.exactos}</td>
+      <td>${u.empates}</td>
       <td>${u.ganador_correcto}</td>
     </tr>`;
   });
@@ -689,7 +690,7 @@ async function loadTabla() {
 
   let html = `<table>
     <thead><tr>
-      <th>#</th><th>Nombre</th><th>Puntos</th><th>Exactos 🎯</th><th>Ganador ✓</th><th>Predicciones</th>
+      <th>#</th><th>Nombre</th><th>Puntos</th><th>🎯 Exacto</th><th>🤝 Empate</th><th>✓ Ganador</th><th>Predicciones</th>
     </tr></thead><tbody>`;
 
   tabla.forEach((u, i) => {
@@ -700,6 +701,7 @@ async function loadTabla() {
       <td><strong>${medalPre} ${u.apodo || u.nombre}</strong><br><small style="color:var(--text-light);font-weight:400;">${u.nombre}</small></td>
       <td><span class="puntos-badge">${u.puntos_total}</span></td>
       <td>${u.exactos}</td>
+      <td>${u.empates || 0}</td>
       <td>${u.ganador_correcto}</td>
       <td>${u.predicciones_total}</td>
     </tr>`;

@@ -127,6 +127,7 @@ app.get('/api/tabla', (req, res) => {
       u.apodo,
       COALESCE(SUM(pred.puntos), 0) as puntos_total,
       COUNT(CASE WHEN pred.puntos = 3 THEN 1 END) as exactos,
+      COUNT(CASE WHEN pred.puntos = 2 THEN 1 END) as empates,
       COUNT(CASE WHEN pred.puntos = 1 THEN 1 END) as ganador_correcto,
       COUNT(pred.id) as predicciones_total
     FROM usuarios u
