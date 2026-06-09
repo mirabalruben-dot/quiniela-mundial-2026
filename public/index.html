@@ -297,10 +297,10 @@
     <!-- TABLA PÚBLICA visible sin login -->
     <div class="card" style="margin-bottom:20px;">
       <h2>🏆 Tabla de Posiciones en Vivo</h2>
-      <div class="puntos-info" style="margin-bottom:14px;">
-        <span class="puntos-tag tag-exacto">🎯 3 pts — Exacto</span>
-        <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;">🤝 2 pts — Empate</span>
-        <span class="puntos-tag tag-ganador">✓ 1 pt — Ganador</span>
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+        <span class="puntos-tag tag-exacto" style="font-size:0.9rem;padding:8px 18px;">🎯 3 pts — Exacto</span>
+        <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;font-size:0.9rem;padding:8px 18px;">🤝 2 pts — Empate</span>
+        <span class="puntos-tag tag-ganador" style="font-size:0.9rem;padding:8px 18px;">✓ 1 pt — Ganador</span>
       </div>
       <div class="tabla-container" id="tablaPublicaContainer">
         <div class="loading" style="padding:20px;color:var(--text-light);">Cargando tabla...</div>
@@ -589,7 +589,7 @@ async function loadTablaPublica() {
   if (!container) return;
   const tabla = await api('/api/tabla');
   if (!tabla.length) {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);">¡Sé el primero en registrarte! 🚀</div>';
+    container.innerHTML = '';
     return;
   }
   let html = `<table>
