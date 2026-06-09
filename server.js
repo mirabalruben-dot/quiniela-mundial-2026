@@ -253,6 +253,33 @@ app.get('/api/admin/usuarios', requireAdmin, (req, res) => {
   res.json(users);
 });
 
+// Eliminar usuario
+app.delete('/api/admin/usuarios/:id', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  db.prepare('DELETE FROM predicciones WHERE usuario_id = ?').run(id);
+  db.prepare('DELETE FROM reset_tokens WHERE usuario_id = ?').run(id);
+  db.prepare('DELETE FROM usuarios WHERE id = ? AND es_admin = 0').run(id);
+  res.json({ ok: true });
+});
+
+// Actualizar usuario (teléfono)
+app.put('/api/admin/usuarios/:id', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { nombre, telefono } = req.body;
+  db.prepare('UPDATE usuarios SET nombre=?, telefono=? WHERE id=? AND es_admin=0').run(nombre, telefono, id);
+  res.json({ ok: true });
+});
+
+// Resetear contraseña por admin
+app.post('/api/admin/usuarios/:id/reset-password', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Mínimo 6 caracteres' });
+  const hash = bcrypt.hashSync(password, 10);
+  db.prepare('UPDATE usuarios SET password=? WHERE id=? AND es_admin=0').run(hash, id);
+  res.json({ ok: true });
+});
+
 // Exportar usuarios a CSV
 app.get('/api/admin/exportar-csv', requireAdmin, (req, res) => {
   const users = db.prepare('SELECT nombre, apodo, email, telefono, fecha_registro FROM usuarios WHERE es_admin = 0 ORDER BY fecha_registro DESC').all();

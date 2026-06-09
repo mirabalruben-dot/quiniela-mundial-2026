@@ -536,7 +536,9 @@
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
         <h2 style="margin:0;">👥 Participantes registrados</h2>
-        <button class="btn btn-primary btn-sm" onclick="exportarCSV()">📥 Exportar a Excel/CSV</button>
+        <button class="btn btn-primary" onclick="exportarCSV()" style="background:#28a745;">
+          📥 Descargar lista Excel/CSV
+        </button>
       </div>
       <div class="tabla-container" id="usuariosContainer"><div class="loading">Cargando...</div></div>
     </div>
@@ -1023,27 +1025,64 @@ async function loadAdmin() {
   document.getElementById('adminPartidosContainer').innerHTML = html;
 
   // Usuarios
-  let uHtml = `<table><thead><tr><th>#</th><th>Nombre</th><th>Apodo</th><th>Email</th><th>Teléfono</th><th>Registro</th></tr></thead><tbody>`;
+  let uHtml = `<table><thead><tr>
+    <th>#</th><th>Nombre</th><th>Apodo</th><th>Email</th><th>Teléfono</th><th>Registro</th><th>Acciones</th>
+  </tr></thead><tbody>`;
   if (usuarios.length === 0) {
-    uHtml += '<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:20px;">No hay participantes registrados aún</td></tr>';
+    uHtml += '<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:20px;">No hay participantes registrados aún</td></tr>';
   }
   usuarios.forEach((u, i) => {
-    uHtml += `<tr>
+    const fecha = u.fecha_registro?.split('T')[0] || '';
+    uHtml += `<tr id="user-row-${u.id}">
       <td>${i+1}</td>
       <td><strong>${u.nombre}</strong></td>
       <td><span style="background:var(--border);padding:2px 8px;border-radius:8px;font-size:0.82rem;">⚽ ${u.apodo}</span></td>
-      <td>${u.email}</td>
+      <td style="font-size:0.85rem;">${u.email}</td>
       <td>${u.telefono||'—'}</td>
-      <td>${u.fecha_registro?.split('T')[0]||''}</td>
+      <td style="font-size:0.82rem;">${fecha}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-sm" style="background:#0d6efd;color:white;padding:4px 8px;" onclick="editarUsuario(${u.id},'${u.nombre.replace(/'/g,"\\'")}','${u.telefono||''}')">✏️</button>
+          <button class="btn btn-sm" style="background:#fd7e14;color:white;padding:4px 8px;" onclick="resetPasswordAdmin(${u.id},'${u.nombre.replace(/'/g,"\\'")}')">🔑</button>
+          <button class="btn btn-sm btn-danger" style="padding:4px 8px;" onclick="eliminarUsuario(${u.id},'${u.nombre.replace(/'/g,"\\'")}')">🗑️</button>
+        </div>
+      </td>
     </tr>`;
   });
   uHtml += '</tbody></table>';
-  uHtml += `<div style="margin-top:10px;font-size:0.85rem;color:var(--text-light);">Total: <strong>${usuarios.length}</strong> participante${usuarios.length!==1?'s':''}</div>`;
+  uHtml += `<div style="margin-top:10px;font-size:0.85rem;color:var(--text-light);">
+    Total: <strong>${usuarios.length}</strong> participante${usuarios.length!==1?'s':''}
+    &nbsp;·&nbsp; ✏️ Editar &nbsp;·&nbsp; 🔑 Resetear contraseña &nbsp;·&nbsp; 🗑️ Eliminar
+  </div>`;
   document.getElementById('usuariosContainer').innerHTML = uHtml;
 }
 
 function exportarCSV() {
   window.open('/api/admin/exportar-csv', '_blank');
+}
+
+async function eliminarUsuario(id, nombre) {
+  if (!confirm(`¿Eliminar a "${nombre}"?\nSe borrarán también todas sus predicciones.`)) return;
+  const r = await api(`/api/admin/usuarios/${id}`, {method:'DELETE'});
+  if (r.ok) { loadAdmin(); }
+  else alert('Error al eliminar');
+}
+
+async function editarUsuario(id, nombre, telefono) {
+  const nuevoNombre = prompt('Nombre:', nombre);
+  if (!nuevoNombre) return;
+  const nuevoTel = prompt('Teléfono:', telefono);
+  const r = await api(`/api/admin/usuarios/${id}`, {method:'PUT', body: JSON.stringify({nombre: nuevoNombre, telefono: nuevoTel||''})});
+  if (r.ok) loadAdmin();
+  else alert('Error al actualizar');
+}
+
+async function resetPasswordAdmin(id, nombre) {
+  const pass = prompt(`Nueva contraseña para "${nombre}" (mínimo 6 caracteres):`);
+  if (!pass || pass.length < 6) return alert('Contraseña muy corta');
+  const r = await api(`/api/admin/usuarios/${id}/reset-password`, {method:'POST', body: JSON.stringify({password: pass})});
+  if (r.ok) alert(`✅ Contraseña de "${nombre}" actualizada`);
+  else alert('Error: ' + r.error);
 }
 
 async function recrearEliminatorias() {
