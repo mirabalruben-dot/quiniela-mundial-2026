@@ -75,11 +75,13 @@ insertConfig.run('puntos_ganador_correcto', '1');
 // Migración: agregar columna numero si no existe
 try { db.prepare('ALTER TABLE partidos ADD COLUMN numero INTEGER').run(); } catch(e) {}
 
-// Migración: recrear todos los partidos si no tienen número o están desactualizados
-const checkNum = db.prepare("SELECT numero FROM partidos WHERE id=1").get();
-if (!checkNum || checkNum.numero === null) {
+// Migración: recrear partidos si no tienen número (solo si hay partidos sin número)
+const sinNumero = db.prepare("SELECT COUNT(*) as c FROM partidos WHERE numero IS NULL").get();
+if (sinNumero.c > 0) {
   db.prepare('DELETE FROM predicciones').run();
   db.prepare('DELETE FROM partidos').run();
+  // Reset autoincrement para que IDs empiecen desde 1
+  try { db.prepare("DELETE FROM sqlite_sequence WHERE name='partidos'").run(); } catch(e) {}
   console.log('Migración: recreando todos los partidos con números oficiales FIFA');
 }
 
