@@ -24,11 +24,12 @@
 
   /* HEADER */
   header {
-    background: linear-gradient(135deg, #0a1f4a 0%, #1a3a6b 50%, #0a1f4a 100%);
+    background: rgba(10, 31, 74, 0.92);
     color: white;
     padding: 0;
     position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
   }
   .header-top {
     display: flex; align-items: center; justify-content: space-between;
@@ -49,24 +50,24 @@
 
   /* HERO */
   .hero {
-    background: linear-gradient(135deg, #0a1f4a 0%, #1a3a6b 60%, #1e4080 100%);
-    color: white; text-align: center; padding: 50px 20px 40px;
+    background:
+      linear-gradient(to bottom, rgba(10,31,74,0.72) 0%, rgba(10,31,74,0.55) 50%, rgba(10,31,74,0.80) 100%),
+      url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1400&q=80') center/cover no-repeat;
+    color: white; text-align: center; padding: 70px 20px 60px;
     position: relative; overflow: hidden;
   }
-  .hero::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  }
-  .hero h2 { font-size: 2.5rem; font-weight: 900; text-shadow: 0 2px 8px rgba(0,0,0,0.3); position: relative; }
-  .hero p { font-size: 1.1rem; opacity: 0.9; margin-top: 8px; position: relative; }
-  .hero-flags { font-size: 2rem; margin: 10px 0; letter-spacing: 4px; }
-  .hero-dates { font-size: 0.9rem; opacity: 0.75; margin-top: 6px; }
+  .hero h2 { font-size: 2.8rem; font-weight: 900; text-shadow: 0 3px 12px rgba(0,0,0,0.6); position: relative; letter-spacing: 1px; }
+  .hero p { font-size: 1.15rem; opacity: 0.95; margin-top: 10px; position: relative; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
+  .hero-flags { font-size: 2rem; margin: 12px 0; letter-spacing: 4px; }
+  .hero-dates { font-size: 0.9rem; opacity: 0.8; margin-top: 6px; }
 
   /* PREMIOS */
   .premios-banner {
     display: flex; justify-content: center; gap: 12px;
-    padding: 20px; flex-wrap: wrap;
-    background: linear-gradient(90deg, #0a1f4a, #1a3a6b, #0a1f4a);
+    padding: 40px 20px 36px; flex-wrap: wrap;
+    background:
+      linear-gradient(to bottom, rgba(10,31,74,0.78) 0%, rgba(10,31,74,0.65) 50%, rgba(10,31,74,0.85) 100%),
+      url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1400&q=80') center/cover no-repeat;
   }
   .premio-card {
     background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
@@ -267,6 +268,14 @@
 </header>
 
 <div class="premios-banner" id="premiosBanner">
+  <div style="width:100%;text-align:center;margin-bottom:24px;">
+    <h2 style="font-size:2.4rem;font-weight:900;color:white;text-shadow:0 3px 14px rgba(0,0,0,0.7);letter-spacing:1px;margin-bottom:6px;">
+      ⚽ QUINIELA MUNDIAL 2026
+    </h2>
+    <p style="color:rgba(255,255,255,0.88);font-size:1rem;text-shadow:0 1px 6px rgba(0,0,0,0.5);">
+      Participa gratis y compite con tus amigos — EE.UU. · Canadá · México
+    </p>
+  </div>
   <div class="premio-card gold">
     <div class="premio-pos">🥇</div>
     <div class="premio-lugar">1ER LUGAR</div>
