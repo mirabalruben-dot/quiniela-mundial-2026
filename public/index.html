@@ -481,6 +481,15 @@
         <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Guardar configuración</button>
       </div>
 
+      <!-- Recrear eliminatorias -->
+      <div style="background:#fff3cd;border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid #ffc107;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <strong style="font-size:0.95rem;">⚙️ Partidos eliminatorios</strong><br>
+          <span style="font-size:0.8rem;color:var(--text-light);">Si faltan partidos de Ronda de 32, Octavos, Cuartos, Semis y Final.</span>
+        </div>
+        <button class="btn btn-sm" style="background:#856404;color:white;" onclick="recrearEliminatorias()">🔧 Recrear eliminatorias</button>
+      </div>
+
       <!-- Sync automático -->
       <div style="background:#e8f4fd;border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid #bee3f8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div>
@@ -885,6 +894,12 @@ async function loadAdmin() {
   });
   uHtml += '</tbody></table>';
   document.getElementById('usuariosContainer').innerHTML = uHtml;
+}
+
+async function recrearEliminatorias() {
+  const r = await api('/api/admin/recrear-eliminatorias', {method:'POST'});
+  alert(r.ok ? '✅ ' + r.msg : '❌ Error');
+  if (r.ok) loadAdmin();
 }
 
 async function enviarEmailPrueba() {
