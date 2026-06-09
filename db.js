@@ -75,9 +75,9 @@ insertConfig.run('puntos_ganador_correcto', '1');
 // Migración: agregar columna numero si no existe
 try { db.prepare('ALTER TABLE partidos ADD COLUMN numero INTEGER').run(); } catch(e) {}
 
-// Migración: recrear si horarios incorrectos (M1 debe ser 15:00 ET)
-const checkHora = db.prepare("SELECT fecha FROM partidos WHERE numero=1").get();
-if (checkHora && !checkHora.fecha.includes('15:00')) {
+// Migración: recrear si partidos incorrectos (M4 debe ser 23:00 ET)
+const checkHora = db.prepare("SELECT fecha FROM partidos WHERE numero=4").get();
+if (checkHora && !checkHora.fecha.includes('23:00')) {
   db.prepare('DELETE FROM predicciones').run();
   db.prepare('DELETE FROM partidos').run();
   try { db.prepare("DELETE FROM sqlite_sequence WHERE name='partidos'").run(); } catch(e) {}
@@ -113,27 +113,27 @@ if (countPartidos.cnt === 0) {
   // Formato: [numero, fase, grupo, local, visitante, fecha, estadio]
   const todosLosPartidos = [
     // GRUPO A (M1-M6)
-    // GRUPO A (M1-M6) — Horarios oficiales ET
+    // GRUPO A (M1-M6) — Fuente oficial ESPN/FIFA
     [1,'Grupos','A','México','Sudáfrica','2026-06-11 15:00 ET','Estadio Azteca - Ciudad de México'],
     [2,'Grupos','A','Corea del Sur','Chequia','2026-06-11 22:00 ET','Estadio Akron - Guadalajara'],
     [3,'Grupos','A','Chequia','Sudáfrica','2026-06-18 12:00 ET','Mercedes-Benz Stadium - Atlanta'],
-    [4,'Grupos','A','México','Corea del Sur','2026-06-18 21:00 ET','Estadio Akron - Guadalajara'],
-    [5,'Grupos','A','Chequia','México','2026-06-24 21:00 ET','Estadio Azteca - Ciudad de México'],
-    [6,'Grupos','A','Sudáfrica','Corea del Sur','2026-06-24 21:00 ET','Estadio BBVA - Monterrey'],
+    [4,'Grupos','A','México','Corea del Sur','2026-06-18 23:00 ET','Estadio Akron - Guadalajara'],
+    [5,'Grupos','A','Sudáfrica','Corea del Sur','2026-06-24 21:00 ET','Estadio BBVA - Monterrey'],
+    [6,'Grupos','A','Chequia','México','2026-06-24 21:00 ET','Estadio Azteca - Ciudad de México'],
     // GRUPO B (M7-M12)
     [7,'Grupos','B','Canadá','Bosnia-Herzegovina','2026-06-12 15:00 ET','BMO Field - Toronto'],
     [8,'Grupos','B','Qatar','Suiza','2026-06-13 15:00 ET',"Levi's Stadium - San Francisco"],
-    [9,'Grupos','B','Suiza','Canadá','2026-06-18 15:00 ET','SoFi Stadium - Los Ángeles'],
+    [9,'Grupos','B','Suiza','Bosnia-Herzegovina','2026-06-18 15:00 ET','SoFi Stadium - Los Ángeles'],
     [10,'Grupos','B','Canadá','Qatar','2026-06-18 18:00 ET','BC Place - Vancouver'],
-    [11,'Grupos','B','Suiza','Bosnia-Herzegovina','2026-06-24 15:00 ET','BC Place - Vancouver'],
-    [12,'Grupos','B','Qatar','Canadá','2026-06-24 15:00 ET','Lumen Field - Seattle'],
+    [11,'Grupos','B','Bosnia-Herzegovina','Qatar','2026-06-24 15:00 ET','Lumen Field - Seattle'],
+    [12,'Grupos','B','Suiza','Canadá','2026-06-24 15:00 ET','BC Place - Vancouver'],
     // GRUPO C (M13-M18)
     [13,'Grupos','C','Brasil','Marruecos','2026-06-13 18:00 ET','MetLife Stadium - Nueva York/Nueva Jersey'],
     [14,'Grupos','C','Haití','Escocia','2026-06-13 21:00 ET','Gillette Stadium - Boston'],
     [15,'Grupos','C','Escocia','Marruecos','2026-06-19 18:00 ET','Gillette Stadium - Boston'],
     [16,'Grupos','C','Brasil','Haití','2026-06-19 21:00 ET','Lincoln Financial Field - Filadelfia'],
-    [17,'Grupos','C','Escocia','Brasil','2026-06-24 18:00 ET','Hard Rock Stadium - Miami'],
-    [18,'Grupos','C','Marruecos','Haití','2026-06-24 18:00 ET','Mercedes-Benz Stadium - Atlanta'],
+    [17,'Grupos','C','Marruecos','Haití','2026-06-24 18:00 ET','Mercedes-Benz Stadium - Atlanta'],
+    [18,'Grupos','C','Escocia','Brasil','2026-06-24 18:00 ET','Hard Rock Stadium - Miami'],
     // GRUPO D (M19-M24)
     [19,'Grupos','D','EE.UU.','Paraguay','2026-06-12 21:00 ET','SoFi Stadium - Los Ángeles'],
     [20,'Grupos','D','Australia','Turquía','2026-06-14 00:00 ET','BC Place - Vancouver'],
@@ -156,19 +156,19 @@ if (countPartidos.cnt === 0) {
     [35,'Grupos','F','Japón','Suecia','2026-06-25 19:00 ET','AT&T Stadium - Dallas'],
     [36,'Grupos','F','Túnez','Países Bajos','2026-06-25 19:00 ET','Arrowhead Stadium - Kansas City'],
     // GRUPO G (M37-M42)
-    [37,'Grupos','G','Irán','Nueva Zelanda','2026-06-15 21:00 ET','SoFi Stadium - Los Ángeles'],
-    [38,'Grupos','G','Bélgica','Egipto','2026-06-15 15:00 ET','Lumen Field - Seattle'],
+    [37,'Grupos','G','Bélgica','Egipto','2026-06-15 18:00 ET','Lumen Field - Seattle'],
+    [38,'Grupos','G','Irán','Nueva Zelanda','2026-06-16 00:00 ET','SoFi Stadium - Los Ángeles'],
     [39,'Grupos','G','Bélgica','Irán','2026-06-21 15:00 ET','SoFi Stadium - Los Ángeles'],
     [40,'Grupos','G','Nueva Zelanda','Egipto','2026-06-21 21:00 ET','BC Place - Vancouver'],
     [41,'Grupos','G','Egipto','Irán','2026-06-26 23:00 ET','Lumen Field - Seattle'],
     [42,'Grupos','G','Nueva Zelanda','Bélgica','2026-06-26 23:00 ET','BC Place - Vancouver'],
     // GRUPO H (M43-M48)
-    [43,'Grupos','H','España','Cabo Verde','2026-06-15 12:00 ET','Mercedes-Benz Stadium - Atlanta'],
+    [43,'Grupos','H','España','Cabo Verde','2026-06-15 13:00 ET','Mercedes-Benz Stadium - Atlanta'],
     [44,'Grupos','H','Arabia Saudita','Uruguay','2026-06-15 18:00 ET','Hard Rock Stadium - Miami'],
     [45,'Grupos','H','España','Arabia Saudita','2026-06-21 12:00 ET','Mercedes-Benz Stadium - Atlanta'],
     [46,'Grupos','H','Uruguay','Cabo Verde','2026-06-21 18:00 ET','Hard Rock Stadium - Miami'],
-    [47,'Grupos','H','Uruguay','España','2026-06-26 20:00 ET','Estadio Akron - Guadalajara'],
-    [48,'Grupos','H','Cabo Verde','Arabia Saudita','2026-06-26 20:00 ET','NRG Stadium - Houston'],
+    [47,'Grupos','H','Cabo Verde','Arabia Saudita','2026-06-26 20:00 ET','NRG Stadium - Houston'],
+    [48,'Grupos','H','Uruguay','España','2026-06-26 20:00 ET','Estadio Akron - Guadalajara'],
     // GRUPO I (M49-M54)
     [49,'Grupos','I','Francia','Senegal','2026-06-16 15:00 ET','MetLife Stadium - Nueva York/Nueva Jersey'],
     [50,'Grupos','I','Irak','Noruega','2026-06-16 18:00 ET','Gillette Stadium - Boston'],
@@ -181,8 +181,8 @@ if (countPartidos.cnt === 0) {
     [56,'Grupos','J','Austria','Jordania','2026-06-17 00:00 ET',"Levi's Stadium - San Francisco"],
     [57,'Grupos','J','Argentina','Austria','2026-06-22 13:00 ET','AT&T Stadium - Dallas'],
     [58,'Grupos','J','Jordania','Argelia','2026-06-22 23:00 ET',"Levi's Stadium - San Francisco"],
-    [59,'Grupos','J','Jordania','Argentina','2026-06-27 22:00 ET','AT&T Stadium - Dallas'],
-    [60,'Grupos','J','Argelia','Austria','2026-06-27 22:00 ET','Arrowhead Stadium - Kansas City'],
+    [59,'Grupos','J','Argelia','Austria','2026-06-27 22:00 ET','Arrowhead Stadium - Kansas City'],
+    [60,'Grupos','J','Jordania','Argentina','2026-06-27 22:00 ET','AT&T Stadium - Dallas'],
     // GRUPO K (M61-M66)
     [61,'Grupos','K','Portugal','Congo DR','2026-06-17 13:00 ET','NRG Stadium - Houston'],
     [62,'Grupos','K','Uzbekistán','Colombia','2026-06-17 22:00 ET','Estadio Azteca - Ciudad de México'],
