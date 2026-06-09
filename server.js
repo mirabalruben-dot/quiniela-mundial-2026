@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const db = require('./db');
 const { startAutoResults, fetchFinishedMatches } = require('./auto-results');
-const { notificarRecordatorio } = require('./emails');
+const { notificarRecordatorio, sendEmail } = require('./emails');
 
 const app = express();
 app.use(express.json());
@@ -217,7 +217,6 @@ if (!adminExists) {
 
 // Email de prueba
 app.post('/api/admin/test-email', requireAdmin, async (req, res) => {
-  const { sendEmail } = require('./emails');
   const { email } = req.body;
   await sendEmail({
     to: email,
