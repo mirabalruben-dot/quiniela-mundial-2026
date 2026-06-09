@@ -811,7 +811,7 @@ function renderPartidos(partidos) {
               <span>⏳</span>
               <div>
                 <div style="font-size:0.82rem;font-weight:600;color:var(--text-light);">${p.equipo_local} vs ${p.equipo_visitante}</div>
-                <div style="font-size:0.72rem;color:var(--text-light);">${formatFecha(p.fecha)} · ${p.estadio || ''}</div>
+                <div style="font-size:0.72rem;color:var(--text-light);">${p.numero ? `M${p.numero} · ` : ''}${formatFecha(p.fecha)} · ${p.estadio || ''}</div>
               </div>
             </div>
             <span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:700;">🔜 Próximamente</span>
@@ -845,7 +845,7 @@ function renderPartidos(partidos) {
               <input class="score-input" type="number" min="0" max="20" value="${visitVal}"
                 ${disabled} data-partido="${p.id}" data-tipo="visitante" oninput="markChanged(${p.id})">
             </div>
-            <div class="partido-info">${formatFecha(p.fecha)} · ${p.estadio || ''}</div>
+            <div class="partido-info">${p.numero ? `<strong>M${p.numero}</strong> · ` : ''}${formatFecha(p.fecha)} · ${p.estadio || ''}</div>
             <div style="margin-top:2px;">${resultadoReal}${puntosHTML}</div>
           </div>
           <div class="equipo equipo-visitante" style="font-size:0.88rem;">${p.equipo_visitante}</div>
