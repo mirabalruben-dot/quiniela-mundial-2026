@@ -1,4 +1,5 @@
 const db = require('./db');
+const { notificarNuevaFase, notificarRecordatorio } = require('./emails');
 
 const API_KEY = process.env.API_FOOTBALL_KEY;
 const API_URL = 'https://v3.football.api-sports.io';
@@ -72,6 +73,17 @@ async function fetchFinishedMatches() {
         db.prepare('UPDATE partidos SET equipo_local=?, equipo_visitante=? WHERE id=?')
           .run(localAPI, visitAPI, partido.id);
         console.log(`[AutoResults] 🔄 ${fase}: ${localAPI} vs ${visitAPI}`);
+
+        // Verificar si TODOS los partidos de esta fase ya tienen equipos reales
+        const pendientes = db.prepare(`
+          SELECT COUNT(*) as cnt FROM partidos
+          WHERE fase = ? AND (equipo_local LIKE 'Ganador%' OR equipo_local LIKE '1ro%' OR equipo_local LIKE '2do%' OR equipo_local LIKE 'Perdedor%')
+        `).get(fase);
+
+        if (pendientes.cnt === 0) {
+          // Todos los equipos definidos — notificar a participantes
+          await notificarNuevaFase(fase, fecha);
+        }
       }
     }
 

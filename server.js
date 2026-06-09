@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const db = require('./db');
 const { startAutoResults, fetchFinishedMatches } = require('./auto-results');
+const { notificarRecordatorio } = require('./emails');
 
 const app = express();
 app.use(express.json());
@@ -220,8 +221,26 @@ app.post('/api/admin/sync-resultados', requireAdmin, async (req, res) => {
   res.json({ ok: true, mensaje: 'Sincronización completada' });
 });
 
+// Recordatorio automático: cada hora revisa si hay partidos en 24h sin predicciones
+function checkRecordatorios() {
+  const manana = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const fases = db.prepare(`
+    SELECT DISTINCT fase FROM partidos
+    WHERE fecha = ? AND completado = 0
+    AND equipo_local NOT LIKE 'Ganador%'
+    AND equipo_local NOT LIKE '1ro%'
+    AND equipo_local NOT LIKE '2do%'
+    AND equipo_local NOT LIKE 'Perdedor%'
+  `).all(manana);
+
+  for (const { fase } of fases) {
+    notificarRecordatorio(fase, 24).catch(console.error);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Quiniela corriendo en http://localhost:${PORT}`);
   startAutoResults();
+  setInterval(checkRecordatorios, 60 * 60 * 1000); // cada hora
 });
