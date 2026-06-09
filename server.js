@@ -27,21 +27,23 @@ const requireAdmin = (req, res, next) => {
 
 // --- AUTH ---
 app.post('/api/register', (req, res) => {
-  const { nombre, email, telefono, password } = req.body;
-  if (!nombre || !email || !password) return res.status(400).json({ error: 'Campos requeridos' });
+  const { nombre, apodo, email, telefono, password } = req.body;
+  if (!nombre || !apodo || !email || !password) return res.status(400).json({ error: 'Campos requeridos' });
 
   const config = db.prepare('SELECT valor FROM configuracion WHERE clave = ?').get('activa');
   if (config?.valor !== '1') return res.status(403).json({ error: 'La quiniela está cerrada para nuevos registros' });
 
   const hash = bcrypt.hashSync(password, 10);
   try {
-    const stmt = db.prepare('INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)');
-    const result = stmt.run(nombre, email, telefono || '', hash);
+    const stmt = db.prepare('INSERT INTO usuarios (nombre, apodo, email, telefono, password) VALUES (?, ?, ?, ?, ?)');
+    const result = stmt.run(nombre, apodo.trim(), email, telefono || '', hash);
     req.session.userId = result.lastInsertRowid;
     req.session.nombre = nombre;
+    req.session.apodo = apodo.trim();
     req.session.esAdmin = false;
-    res.json({ ok: true, nombre });
+    res.json({ ok: true, nombre, apodo: apodo.trim() });
   } catch (e) {
+    if (e.message.includes('apodo')) return res.status(400).json({ error: 'Ese apodo ya está en uso, elige otro' });
     res.status(400).json({ error: 'El email ya está registrado' });
   }
 });
@@ -54,8 +56,9 @@ app.post('/api/login', (req, res) => {
   }
   req.session.userId = user.id;
   req.session.nombre = user.nombre;
+  req.session.apodo = user.apodo;
   req.session.esAdmin = !!user.es_admin;
-  res.json({ ok: true, nombre: user.nombre, esAdmin: !!user.es_admin });
+  res.json({ ok: true, nombre: user.nombre, apodo: user.apodo, esAdmin: !!user.es_admin });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -65,7 +68,7 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/me', (req, res) => {
   if (!req.session.userId) return res.json({ loggedIn: false });
-  res.json({ loggedIn: true, nombre: req.session.nombre, esAdmin: req.session.esAdmin, userId: req.session.userId });
+  res.json({ loggedIn: true, nombre: req.session.nombre, apodo: req.session.apodo, esAdmin: req.session.esAdmin, userId: req.session.userId });
 });
 
 // --- PARTIDOS ---
@@ -115,6 +118,7 @@ app.get('/api/tabla', (req, res) => {
     SELECT
       u.id,
       u.nombre,
+      u.apodo,
       COALESCE(SUM(pred.puntos), 0) as puntos_total,
       COUNT(CASE WHEN pred.puntos = 3 THEN 1 END) as exactos,
       COUNT(CASE WHEN pred.puntos = 1 THEN 1 END) as ganador_correcto,
@@ -123,7 +127,7 @@ app.get('/api/tabla', (req, res) => {
     LEFT JOIN predicciones pred ON pred.usuario_id = u.id
     WHERE u.es_admin = 0
     GROUP BY u.id
-    ORDER BY puntos_total DESC, exactos DESC, u.nombre ASC
+    ORDER BY puntos_total DESC, exactos DESC, u.apodo ASC
   `).all();
 
   // Asignar posiciones

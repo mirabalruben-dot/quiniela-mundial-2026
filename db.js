@@ -7,6 +7,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS usuarios (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
+    apodo TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     telefono TEXT,
     password TEXT NOT NULL,
