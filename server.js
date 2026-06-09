@@ -3,6 +3,7 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const db = require('./db');
+const { startAutoResults, fetchFinishedMatches } = require('./auto-results');
 
 const app = express();
 app.use(express.json());
@@ -213,5 +214,14 @@ if (!adminExists) {
   console.log('Admin creado: admin@quiniela.com / Admin2026!');
 }
 
+// Endpoint admin para forzar actualización manual
+app.post('/api/admin/sync-resultados', requireAdmin, async (req, res) => {
+  await fetchFinishedMatches();
+  res.json({ ok: true, mensaje: 'Sincronización completada' });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Quiniela corriendo en http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Quiniela corriendo en http://localhost:${PORT}`);
+  startAutoResults();
+});
