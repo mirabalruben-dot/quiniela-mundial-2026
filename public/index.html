@@ -726,7 +726,8 @@ async function loadPredicciones() {
   document.getElementById('predContent').style.display = '';
 
   try {
-    const [partidos, predicciones] = await Promise.all([api('/api/partidos'), api('/api/predicciones')]);
+    const [partidos, prediccionesResp] = await Promise.all([api('/api/partidos'), api('/api/predicciones')]);
+    const predicciones = Array.isArray(prediccionesResp) ? prediccionesResp : [];
     todosPartidos = partidos;
     misPredicciones = {};
     predicciones.forEach(p => { misPredicciones[p.partido_id] = p; });

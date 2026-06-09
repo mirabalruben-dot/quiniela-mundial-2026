@@ -7,6 +7,7 @@ const { startAutoResults, fetchFinishedMatches } = require('./auto-results');
 const { notificarRecordatorio, sendEmail } = require('./emails');
 
 const app = express();
+app.set('trust proxy', 1); // Necesario para cookies seguras detrás de Render/proxy
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
