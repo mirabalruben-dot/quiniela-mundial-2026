@@ -327,6 +327,22 @@
           <input type="password" id="loginPassword" placeholder="••••••••">
         </div>
         <button class="btn btn-primary btn-full" onclick="doLogin()">Entrar →</button>
+        <p style="text-align:center;margin-top:12px;font-size:0.85rem;">
+          <a href="#" onclick="mostrarOlvidePassword()" style="color:var(--verde);text-decoration:none;">¿Olvidaste tu contraseña?</a>
+        </p>
+      </div>
+
+      <!-- Olvidé contraseña -->
+      <div id="forgotForm" style="display:none;">
+        <p style="color:var(--text-light);font-size:0.88rem;margin-bottom:12px;">Escribe tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="forgotEmail" placeholder="tu@email.com">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doForgotPassword()">📧 Enviar enlace de recuperación</button>
+        <p style="text-align:center;margin-top:12px;font-size:0.85rem;">
+          <a href="#" onclick="mostrarLogin()" style="color:var(--verde);text-decoration:none;">← Volver al login</a>
+        </p>
       </div>
 
       <!-- Register -->
@@ -609,6 +625,26 @@ function switchAuthTab(tab) {
 
 function showMsg(elId, msg, type='info') {
   document.getElementById(elId).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+function mostrarOlvidePassword() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotForm').style.display = '';
+  document.getElementById('authMsg').innerHTML = '';
+}
+
+function mostrarLogin() {
+  document.getElementById('loginForm').style.display = '';
+  document.getElementById('forgotForm').style.display = 'none';
+  document.getElementById('authMsg').innerHTML = '';
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('forgotEmail').value;
+  if (!email) return showMsg('authMsg', 'Ingresa tu email', 'error');
+  const r = await api('/api/forgot-password', {method:'POST', body: JSON.stringify({email})});
+  showMsg('authMsg', '✅ Si tu email está registrado recibirás un enlace en los próximos minutos. Revisa también tu carpeta de spam.', 'success');
+  document.getElementById('forgotForm').style.display = 'none';
 }
 
 async function doLogin() {

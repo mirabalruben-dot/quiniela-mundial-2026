@@ -68,6 +68,53 @@ app.post('/api/login', (req, res) => {
   res.json({ ok: true, nombre: user.nombre, apodo: user.apodo, esAdmin: !!user.es_admin });
 });
 
+// RECUPERAR CONTRASEÑA — solicitar reset
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  const user = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
+  if (!user) return res.json({ ok: true }); // No revelar si existe o no
+
+  const token = require('crypto').randomBytes(32).toString('hex');
+  const expira = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
+
+  db.prepare('DELETE FROM reset_tokens WHERE usuario_id = ?').run(user.id);
+  db.prepare('INSERT INTO reset_tokens (usuario_id, token, expira) VALUES (?, ?, ?)').run(user.id, token, expira);
+
+  const appUrl = process.env.APP_URL || 'https://quiniela-mundial-2026-rcqj.onrender.com';
+  const resetUrl = `${appUrl}/reset-password.html?token=${token}`;
+
+  const { sendEmail } = require('./emails');
+  await sendEmail({
+    to: user.email,
+    nombre: user.nombre,
+    asunto: '🔑 Recuperar contraseña - Quiniela Insurance USA 2026',
+    titulo: 'Recupera tu contraseña',
+    mensaje: `Hola <strong>${user.nombre}</strong>, recibimos una solicitud para restablecer tu contraseña de la Quiniela Insurance USA 2026.
+              <br><br>Este enlace es válido por <strong>1 hora</strong>. Si no solicitaste este cambio, ignora este email.`,
+    cta_texto: '🔑 Restablecer mi contraseña',
+    cta_url: resetUrl,
+  });
+
+  res.json({ ok: true });
+});
+
+// RECUPERAR CONTRASEÑA — aplicar nueva contraseña
+app.post('/api/reset-password', (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password || password.length < 6)
+    return res.status(400).json({ error: 'Datos inválidos' });
+
+  const reset = db.prepare('SELECT * FROM reset_tokens WHERE token = ? AND usado = 0').get(token);
+  if (!reset) return res.status(400).json({ error: 'Enlace inválido o expirado' });
+  if (new Date(reset.expira) < new Date()) return res.status(400).json({ error: 'Enlace expirado' });
+
+  const hash = bcrypt.hashSync(password, 10);
+  db.prepare('UPDATE usuarios SET password = ? WHERE id = ?').run(hash, reset.usuario_id);
+  db.prepare('UPDATE reset_tokens SET usado = 1 WHERE id = ?').run(reset.id);
+
+  res.json({ ok: true });
+});
+
 app.post('/api/logout', (req, res) => {
   req.session.destroy();
   res.json({ ok: true });

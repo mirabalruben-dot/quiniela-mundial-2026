@@ -50,6 +50,14 @@ db.exec(`
     clave TEXT PRIMARY KEY,
     valor TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    expira TEXT NOT NULL,
+    usado INTEGER DEFAULT 0
+  );
 `);
 
 // Configuración por defecto
