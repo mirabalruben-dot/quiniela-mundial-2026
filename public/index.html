@@ -800,7 +800,7 @@ function renderPartidos(partidos) {
   const FASES_ORDEN = ['Grupos', 'Ronda de 32', 'Octavos de Final', 'Cuartos de Final', 'Semifinales', 'Tercer Lugar', 'Final'];
   const FASE_ICONS = { 'Grupos':'⚽', 'Ronda de 32':'🔵', 'Octavos de Final':'🟡', 'Cuartos de Final':'🟠', 'Semifinales':'🔴', 'Tercer Lugar':'🥉', 'Final':'🏆' };
 
-  // Agrupar por fase → grupo/sección (grupos en orden alfabético)
+  // Agrupar por fase → grupo/sección
   const porFase = {};
   partidos.forEach(p => {
     if (!porFase[p.fase]) porFase[p.fase] = {};
@@ -808,10 +808,13 @@ function renderPartidos(partidos) {
     if (!porFase[p.fase][key]) porFase[p.fase][key] = [];
     porFase[p.fase][key].push(p);
   });
-  // Ordenar grupos alfabéticamente dentro de la fase de grupos
+  // Orden explícito A-L para grupos
+  const GRUPOS_ORDEN = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F','Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L'];
   if (porFase['Grupos']) {
     const sorted = {};
-    Object.keys(porFase['Grupos']).sort().forEach(k => sorted[k] = porFase['Grupos'][k]);
+    GRUPOS_ORDEN.forEach(k => { if (porFase['Grupos'][k]) sorted[k] = porFase['Grupos'][k]; });
+    // Cualquier otro grupo que no esté en la lista (por si acaso)
+    Object.keys(porFase['Grupos']).forEach(k => { if (!sorted[k]) sorted[k] = porFase['Grupos'][k]; });
     porFase['Grupos'] = sorted;
   }
 
