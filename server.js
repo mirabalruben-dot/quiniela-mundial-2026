@@ -209,8 +209,8 @@ db.prepare("UPDATE configuracion SET valor = ? WHERE clave = 'costo_participacio
 const adminExists = db.prepare('SELECT id FROM usuarios WHERE es_admin = 1').get();
 if (!adminExists) {
   const hash = bcrypt.hashSync('Admin2026!', 10);
-  db.prepare('INSERT OR IGNORE INTO usuarios (nombre, email, password, es_admin) VALUES (?, ?, ?, 1)')
-    .run('Administrador', 'admin@quiniela.com', hash);
+  db.prepare('INSERT OR IGNORE INTO usuarios (nombre, apodo, email, password, es_admin) VALUES (?, ?, ?, ?, 1)')
+    .run('Administrador', 'admin', 'admin@quiniela.com', hash);
   console.log('Admin creado: admin@quiniela.com / Admin2026!');
 }
 
