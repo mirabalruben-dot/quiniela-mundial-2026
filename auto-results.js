@@ -33,6 +33,18 @@ function mapTeam(name) {
   return TEAM_MAP[name] || name;
 }
 
+async function fetchFromAPI(status) {
+  const res = await fetch(`${API_URL}/fixtures?league=${LEAGUE_ID}&season=${SEASON}&status=${status}`, {
+    headers: {
+      'x-apisports-key': API_KEY,
+      'x-rapidapi-host': 'v3.football.api-sports.io'
+    }
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.response || [];
+}
+
 async function fetchFinishedMatches() {
   if (!API_KEY) {
     console.log('[AutoResults] No API key configurada');
@@ -40,23 +52,34 @@ async function fetchFinishedMatches() {
   }
 
   try {
-    const res = await fetch(`${API_URL}/fixtures?league=${LEAGUE_ID}&season=${SEASON}&status=FT`, {
-      headers: {
-        'x-apisports-key': API_KEY,
-        'x-rapidapi-host': 'v3.football.api-sports.io'
-      }
-    });
+    // 1. Actualizar nombres de equipos en eliminatorias (partidos no iniciados con equipo genérico)
+    const upcomingFixtures = await fetchFromAPI('NS'); // Not Started
+    for (const fixture of upcomingFixtures) {
+      const localAPI = mapTeam(fixture.teams.home.name);
+      const visitAPI = mapTeam(fixture.teams.away.name);
+      const fecha = fixture.fixture.date?.split('T')[0];
+      const fase = mapRound(fixture.league.round);
 
-    if (!res.ok) {
-      console.log('[AutoResults] Error API:', res.status);
-      return;
+      if (!fase || fase === 'Grupos') continue;
+
+      // Buscar partido genérico de esa fecha y fase para actualizar nombre
+      const partido = db.prepare(`
+        SELECT * FROM partidos WHERE fase = ? AND fecha = ? AND completado = 0
+        AND (equipo_local LIKE 'Ganador%' OR equipo_local LIKE '1ro%' OR equipo_local LIKE '2do%' OR equipo_local LIKE 'Perdedor%')
+      `).get(fase, fecha);
+
+      if (partido) {
+        db.prepare('UPDATE partidos SET equipo_local=?, equipo_visitante=? WHERE id=?')
+          .run(localAPI, visitAPI, partido.id);
+        console.log(`[AutoResults] 🔄 ${fase}: ${localAPI} vs ${visitAPI}`);
+      }
     }
 
-    const data = await res.json();
-    const fixtures = data.response || [];
-    console.log(`[AutoResults] ${fixtures.length} partidos terminados encontrados`);
+    // 2. Procesar partidos terminados y calcular puntos
+    const finished = await fetchFromAPI('FT');
+    console.log(`[AutoResults] ${finished.length} partidos terminados encontrados`);
 
-    for (const fixture of fixtures) {
+    for (const fixture of finished) {
       const localAPI = mapTeam(fixture.teams.home.name);
       const visitAPI = mapTeam(fixture.teams.away.name);
       const golesLocal = fixture.goals.home;
@@ -64,40 +87,30 @@ async function fetchFinishedMatches() {
 
       if (golesLocal === null || golesVisit === null) continue;
 
-      // Buscar el partido en nuestra DB
       const partido = db.prepare(`
         SELECT * FROM partidos
-        WHERE (equipo_local = ? AND equipo_visitante = ?)
-        OR (equipo_local = ? AND equipo_visitante = ?)
+        WHERE ((equipo_local = ? AND equipo_visitante = ?) OR (equipo_local = ? AND equipo_visitante = ?))
         AND completado = 0
       `).get(localAPI, visitAPI, visitAPI, localAPI);
 
       if (!partido) continue;
 
-      // Determinar si los equipos están invertidos
       const invertido = partido.equipo_local === visitAPI;
       const gl = invertido ? golesVisit : golesLocal;
       const gv = invertido ? golesLocal : golesVisit;
 
-      // Actualizar resultado
       db.prepare('UPDATE partidos SET goles_local=?, goles_visitante=?, completado=1 WHERE id=?')
         .run(gl, gv, partido.id);
 
-      // Calcular puntos
       const ganadorReal = gl > gv ? 'L' : gv > gl ? 'V' : 'E';
       const predicciones = db.prepare('SELECT * FROM predicciones WHERE partido_id = ?').all(partido.id);
 
       for (const pred of predicciones) {
         let puntos = 0;
         const ganadorPred = pred.goles_local > pred.goles_visitante ? 'L' : pred.goles_visitante > pred.goles_local ? 'V' : 'E';
-
-        if (pred.goles_local === gl && pred.goles_visitante === gv) {
-          puntos = 3;
-        } else if (ganadorReal === 'E' && ganadorPred === 'E') {
-          puntos = 2;
-        } else if (ganadorPred === ganadorReal) {
-          puntos = 1;
-        }
+        if (pred.goles_local === gl && pred.goles_visitante === gv) puntos = 3;
+        else if (ganadorReal === 'E' && ganadorPred === 'E') puntos = 2;
+        else if (ganadorPred === ganadorReal) puntos = 1;
         db.prepare('UPDATE predicciones SET puntos = ? WHERE id = ?').run(puntos, pred.id);
       }
 
@@ -106,6 +119,18 @@ async function fetchFinishedMatches() {
   } catch (err) {
     console.error('[AutoResults] Error:', err.message);
   }
+}
+
+function mapRound(round) {
+  if (!round) return null;
+  if (round.includes('Group')) return 'Grupos';
+  if (round.includes('Round of 32')) return 'Ronda de 32';
+  if (round.includes('Round of 16')) return 'Octavos de Final';
+  if (round.includes('Quarter')) return 'Cuartos de Final';
+  if (round.includes('Semi')) return 'Semifinales';
+  if (round.includes('3rd')) return 'Tercer Lugar';
+  if (round.includes('Final')) return 'Final';
+  return null;
 }
 
 // Ejecutar cada 30 minutos
