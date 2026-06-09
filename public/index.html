@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela Mundial 2026</title>
+<style>
+  :root {
+    --verde: #1a7a1a;
+    --verde-dark: #145c14;
+    --dorado: #d4a017;
+    --plata: #a8a8a8;
+    --bronce: #cd7f32;
+    --bg: #f0f4f0;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text-light: #555;
+    --border: #dde5dd;
+    --rojo: #c0392b;
+    --azul: #2980b9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0a3d0a 0%, #1a7a1a 50%, #0a3d0a 100%);
+    color: white;
+    padding: 0;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .header-top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { font-size: 2rem; }
+  .logo-text h1 { font-size: 1.2rem; font-weight: 800; letter-spacing: 0.5px; }
+  .logo-text p { font-size: 0.75rem; opacity: 0.8; }
+  .header-nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .nav-btn {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: white; padding: 6px 14px; border-radius: 20px; cursor: pointer;
+    font-size: 0.85rem; transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.3); }
+  .nav-btn.primary { background: var(--dorado); border-color: var(--dorado); color: #1a1a1a; font-weight: 700; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0a3d0a 0%, #1a7a1a 60%, #2d5a2d 100%);
+    color: white; text-align: center; padding: 50px 20px 40px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero h2 { font-size: 2.5rem; font-weight: 900; text-shadow: 0 2px 8px rgba(0,0,0,0.3); position: relative; }
+  .hero p { font-size: 1.1rem; opacity: 0.9; margin-top: 8px; position: relative; }
+  .hero-flags { font-size: 2rem; margin: 10px 0; letter-spacing: 4px; }
+  .hero-dates { font-size: 0.9rem; opacity: 0.75; margin-top: 6px; }
+
+  /* PREMIOS */
+  .premios-banner {
+    display: flex; justify-content: center; gap: 12px;
+    padding: 20px; flex-wrap: wrap;
+    background: linear-gradient(90deg, #0a3d0a, #1a7a1a, #0a3d0a);
+  }
+  .premio-card {
+    background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 16px; padding: 16px 24px; text-align: center; color: white;
+    min-width: 150px;
+  }
+  .premio-card.gold { border-color: var(--dorado); background: rgba(212,160,23,0.2); }
+  .premio-card.silver { border-color: var(--plata); background: rgba(168,168,168,0.2); }
+  .premio-card.bronze { border-color: var(--bronce); background: rgba(205,127,50,0.2); }
+  .premio-pos { font-size: 2rem; }
+  .premio-lugar { font-size: 0.8rem; opacity: 0.8; font-weight: 600; letter-spacing: 1px; }
+  .premio-monto { font-size: 1.5rem; font-weight: 900; margin-top: 4px; }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card); border-radius: 16px; padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+  .card h2 { font-size: 1.2rem; margin-bottom: 16px; color: var(--verde-dark); display: flex; align-items: center; gap: 8px; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-light); }
+  input[type=text], input[type=email], input[type=tel], input[type=password], input[type=number] {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 0.95rem; transition: border-color 0.2s;
+    background: #fafafa;
+  }
+  input:focus { outline: none; border-color: var(--verde); background: white; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 24px; border: none; border-radius: 10px; cursor: pointer;
+    font-size: 0.95rem; font-weight: 700; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--verde); color: white; }
+  .btn-primary:hover { background: var(--verde-dark); }
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn-secondary:hover { background: #c8d5c8; }
+  .btn-danger { background: var(--rojo); color: white; }
+  .btn-gold { background: var(--dorado); color: #1a1a1a; }
+  .btn-sm { padding: 6px 14px; font-size: 0.82rem; }
+  .btn-full { width: 100%; justify-content: center; padding: 14px; font-size: 1rem; }
+
+  /* TABLA POSICIONES */
+  .tabla-container { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--verde); color: white; padding: 10px 12px;
+    text-align: left; font-size: 0.82rem; letter-spacing: 0.5px;
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  tr:hover td { background: #f5faf5; }
+  .pos-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%; font-weight: 800; font-size: 0.85rem;
+  }
+  .pos-1 { background: var(--dorado); color: white; }
+  .pos-2 { background: var(--plata); color: white; }
+  .pos-3 { background: var(--bronce); color: white; }
+  .pos-other { background: var(--border); color: var(--text-light); }
+  .puntos-badge {
+    background: var(--verde); color: white; padding: 2px 10px;
+    border-radius: 12px; font-weight: 700; font-size: 0.85rem;
+  }
+
+  /* PARTIDOS / PREDICCIONES */
+  .grupo-title {
+    background: var(--verde); color: white; padding: 8px 16px;
+    border-radius: 8px; font-weight: 800; margin: 20px 0 10px;
+    display: flex; align-items: center; gap: 8px; font-size: 0.9rem;
+  }
+  .partido-row {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 8px; padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .partido-row:last-child { border-bottom: none; }
+  .equipo { font-weight: 600; font-size: 0.9rem; }
+  .equipo-local { text-align: right; }
+  .equipo-visitante { text-align: left; }
+  .vs-box { display: flex; gap: 6px; align-items: center; }
+  .score-input {
+    width: 46px; height: 38px; text-align: center; font-size: 1.1rem;
+    font-weight: 700; border: 2px solid var(--border); border-radius: 8px;
+    padding: 0;
+  }
+  .score-input:focus { border-color: var(--verde); outline: none; }
+  .vs-sep { color: var(--text-light); font-weight: 700; font-size: 0.9rem; }
+  .partido-info { font-size: 0.75rem; color: var(--text-light); text-align: center; margin-top: 2px; }
+  .pred-points {
+    font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+    margin-left: 6px;
+  }
+  .pred-exacto { background: #d4edda; color: #155724; }
+  .pred-correcto { background: #fff3cd; color: #856404; }
+  .pred-fallo { background: #f8d7da; color: #721c24; }
+
+  /* AUTH TABS */
+  .auth-tabs { display: flex; gap: 0; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--border); }
+  .auth-tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; background: #f5f5f5; font-weight: 600; transition: all 0.2s; }
+  .auth-tab.active { background: var(--verde); color: white; }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 0.9rem; }
+  .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+  .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  .alert-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--card); border-radius: 14px; padding: 16px; text-align: center; border: 1.5px solid var(--border); }
+  .stat-num { font-size: 2rem; font-weight: 900; color: var(--verde); }
+  .stat-label { font-size: 0.78rem; color: var(--text-light); margin-top: 4px; }
+
+  /* ADMIN */
+  .admin-partido {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap;
+  }
+  .admin-partido:last-child { border-bottom: none; }
+  .admin-result-form { display: flex; align-items: center; gap: 8px; }
+  .completado-badge { background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; }
+  .pendiente-badge { background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; }
+
+  /* SISTEMA PUNTOS */
+  .puntos-info { display: flex; gap: 12px; flex-wrap: wrap; }
+  .puntos-tag {
+    display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+    border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+  }
+  .tag-exacto { background: #d4edda; color: #155724; }
+  .tag-ganador { background: #fff3cd; color: #856404; }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 40px; color: var(--text-light); font-size: 1rem; }
+
+  /* USER INFO */
+  .user-info { font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .hero h2 { font-size: 1.6rem; }
+    .premios-banner { gap: 8px; }
+    .premio-card { min-width: 120px; padding: 12px 16px; }
+    .header-top { flex-direction: column; gap: 10px; }
+    .header-nav { justify-content: center; }
+  }
+
+  .divider { border: none; border-top: 1.5px solid var(--border); margin: 20px 0; }
+  .text-center { text-align: center; }
+  .mt-8 { margin-top: 8px; }
+  .flex-center { display: flex; justify-content: center; }
+  .save-floating {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--verde); color: white; border: none;
+    border-radius: 50px; padding: 14px 28px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    display: flex; align-items: center; gap: 8px; z-index: 200;
+    transition: all 0.2s;
+  }
+  .save-floating:hover { background: var(--verde-dark); transform: translateY(-2px); }
+  .save-floating.hidden { display: none; }
+  .fase-badge {
+    display: inline-block; background: var(--dorado); color: #1a1a1a;
+    padding: 2px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;
+    margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">
+      <span class="logo-icon">⚽</span>
+      <div class="logo-text">
+        <h1>QUINIELA MUNDIAL 2026</h1>
+        <p>EE.UU. · Canadá · México</p>
+      </div>
+    </div>
+    <div class="header-nav" id="headerNav">
+      <button class="nav-btn" onclick="showSection('tabla')">🏆 Tabla</button>
+      <button class="nav-btn active" onclick="showSection('predicciones')">⚽ Predicciones</button>
+      <button class="nav-btn" id="adminNavBtn" style="display:none" onclick="showSection('admin')">⚙️ Admin</button>
+      <span class="user-info" id="userInfo"></span>
+      <button class="nav-btn primary" id="authNavBtn" onclick="showSection('auth')">Entrar</button>
+      <button class="nav-btn" id="logoutBtn" style="display:none" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+</header>
+
+<div class="premios-banner" id="premiosBanner">
+  <div class="premio-card gold">
+    <div class="premio-pos">🥇</div>
+    <div class="premio-lugar">1ER LUGAR</div>
+    <div class="premio-monto" id="premio1">$1,000</div>
+  </div>
+  <div class="premio-card silver">
+    <div class="premio-pos">🥈</div>
+    <div class="premio-lugar">2DO LUGAR</div>
+    <div class="premio-monto" id="premio2">$500</div>
+  </div>
+  <div class="premio-card bronze">
+    <div class="premio-pos">🥉</div>
+    <div class="premio-lugar">3ER LUGAR</div>
+    <div class="premio-monto" id="premio3">$250</div>
+  </div>
+  <div class="premio-card">
+    <div class="premio-pos">💰</div>
+    <div class="premio-lugar">PARTICIPACIÓN</div>
+    <div class="premio-monto" id="costoParticipacion">$50</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- AUTH SECTION -->
+  <div class="section active" id="section-auth">
+    <div class="card" style="max-width:420px;margin:0 auto;">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Iniciar Sesión</div>
+        <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Registrarse</div>
+      </div>
+      <div id="authMsg"></div>
+
+      <!-- Login -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="••••••••">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doLogin()">Entrar →</button>
+      </div>
+
+      <!-- Register -->
+      <div id="registerForm" style="display:none">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" id="regNombre" placeholder="Tu nombre">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label>Teléfono (opcional)</label>
+          <input type="tel" id="regTelefono" placeholder="+52 55 1234 5678">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doRegister()">Unirse a la Quiniela →</button>
+      </div>
+
+      <hr class="divider">
+      <p style="font-size:0.8rem;text-align:center;color:var(--text-light);">
+        Sistema de puntos: <strong>3 pts</strong> resultado exacto · <strong>1 pt</strong> ganador correcto
+      </p>
+    </div>
+  </div>
+
+  <!-- TABLA POSICIONES -->
+  <div class="section" id="section-tabla">
+    <div class="card">
+      <h2>🏆 Tabla de Posiciones</h2>
+      <div class="puntos-info" style="margin-bottom:16px;">
+        <span class="puntos-tag tag-exacto">🎯 3 pts — Resultado exacto</span>
+        <span class="puntos-tag tag-ganador">✓ 1 pt — Ganador correcto</span>
+      </div>
+      <div class="tabla-container" id="tablaContainer">
+        <div class="loading">Cargando tabla...</div>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid" style="display:none">
+      <div class="stat-card">
+        <div class="stat-num" id="statParticipantes">0</div>
+        <div class="stat-label">Participantes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statPartidosJugados">0</div>
+        <div class="stat-label">Partidos jugados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statMaxPuntos">0</div>
+        <div class="stat-label">Puntos máximos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREDICCIONES -->
+  <div class="section" id="section-predicciones">
+    <div id="predLoginMsg" class="card" style="max-width:500px;margin:0 auto;text-align:center;display:none;">
+      <div style="font-size:3rem;margin-bottom:12px;">⚽</div>
+      <h2 style="color:var(--verde);justify-content:center;">¡Haz tus predicciones!</h2>
+      <p style="color:var(--text-light);margin:12px 0;">Regístrate o inicia sesión para participar en la quiniela</p>
+      <button class="btn btn-primary" onclick="showSection('auth')">Entrar / Registrarse →</button>
+    </div>
+    <div id="predContent" style="display:none;">
+      <div class="card" style="margin-bottom:12px;">
+        <h2>⚽ Mis Predicciones</h2>
+        <p style="color:var(--text-light);font-size:0.88rem;">Ingresa el marcador que predices para cada partido. Solo puedes modificar partidos que aún no han iniciado.</p>
+        <div class="puntos-info" style="margin-top:12px;">
+          <span class="puntos-tag tag-exacto">🎯 3 pts exacto</span>
+          <span class="puntos-tag tag-ganador">✓ 1 pt ganador</span>
+        </div>
+      </div>
+      <div id="partidosContainer"><div class="loading">Cargando partidos...</div></div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="section" id="section-admin">
+    <div class="card">
+      <h2>⚙️ Panel de Administración</h2>
+
+      <!-- Config premios -->
+      <div style="background:#f8fff8;border-radius:12px;padding:16px;margin-bottom:24px;border:1.5px solid var(--border);">
+        <h3 style="margin-bottom:12px;font-size:1rem;">💰 Configuración de Premios</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:12px;">
+          <div class="form-group" style="margin:0;">
+            <label>Nombre Quiniela</label>
+            <input type="text" id="cfgNombre" placeholder="Nombre de la quiniela">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>🥇 Premio 1er lugar</label>
+            <input type="text" id="cfgPremio1" placeholder="$1,000">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>🥈 Premio 2do lugar</label>
+            <input type="text" id="cfgPremio2" placeholder="$500">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>🥉 Premio 3er lugar</label>
+            <input type="text" id="cfgPremio3" placeholder="$250">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>💵 Costo participación</label>
+            <input type="text" id="cfgCosto" placeholder="$50">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Estado inscripciones</label>
+            <select id="cfgActiva" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:0.95rem;">
+              <option value="1">Abiertas ✅</option>
+              <option value="0">Cerradas ❌</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Guardar configuración</button>
+      </div>
+
+      <!-- Ingresar resultados -->
+      <h3 style="margin-bottom:12px;font-size:1rem;">📊 Ingresar Resultados</h3>
+      <div id="adminPartidosContainer"><div class="loading">Cargando...</div></div>
+    </div>
+
+    <!-- Lista participantes -->
+    <div class="card">
+      <h2>👥 Participantes registrados</h2>
+      <div class="tabla-container" id="usuariosContainer"><div class="loading">Cargando...</div></div>
+    </div>
+  </div>
+
+</main>
+
+<button class="save-floating hidden" id="saveFloatBtn" onclick="savePrediccionesAll()">
+  💾 Guardar predicciones
+</button>
+
+<script>
+let currentUser = null;
+let todosPartidos = [];
+let misPredicciones = {};
+let cambiosPendientes = {};
+
+async function api(url, opts={}) {
+  const r = await fetch(url, { headers: {'Content-Type':'application/json'}, ...opts });
+  return r.json();
+}
+
+async function init() {
+  const me = await api('/api/me');
+  currentUser = me;
+  updateNav(me);
+  loadConfig();
+  if (me.loggedIn) {
+    showSection('predicciones');
+  } else {
+    showSection('auth');
+  }
+}
+
+function updateNav(me) {
+  const authBtn = document.getElementById('authNavBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const adminBtn = document.getElementById('adminNavBtn');
+  const userInfo = document.getElementById('userInfo');
+  if (me.loggedIn) {
+    authBtn.style.display = 'none';
+    logoutBtn.style.display = '';
+    userInfo.textContent = '👤 ' + me.nombre;
+    if (me.esAdmin) adminBtn.style.display = '';
+  } else {
+    authBtn.style.display = '';
+    logoutBtn.style.display = 'none';
+    userInfo.textContent = '';
+    adminBtn.style.display = 'none';
+  }
+}
+
+async function loadConfig() {
+  const cfg = await api('/api/config');
+  document.getElementById('premio1').textContent = cfg.premio_1 || '$1,000';
+  document.getElementById('premio2').textContent = cfg.premio_2 || '$500';
+  document.getElementById('premio3').textContent = cfg.premio_3 || '$250';
+  document.getElementById('costoParticipacion').textContent = cfg.costo_participacion || '$50';
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  if (name === 'tabla') loadTabla();
+  if (name === 'predicciones') loadPredicciones();
+  if (name === 'admin') loadAdmin();
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('authMsg').innerHTML = '';
+}
+
+function showMsg(elId, msg, type='info') {
+  document.getElementById(elId).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const r = await api('/api/login', {method:'POST', body: JSON.stringify({email, password})});
+  if (r.ok) {
+    currentUser = { loggedIn: true, nombre: r.nombre, esAdmin: r.esAdmin };
+    updateNav(currentUser);
+    showSection('predicciones');
+  } else {
+    showMsg('authMsg', r.error, 'error');
+  }
+}
+
+async function doRegister() {
+  const nombre = document.getElementById('regNombre').value;
+  const email = document.getElementById('regEmail').value;
+  const telefono = document.getElementById('regTelefono').value;
+  const password = document.getElementById('regPassword').value;
+  const r = await api('/api/register', {method:'POST', body: JSON.stringify({nombre, email, telefono, password})});
+  if (r.ok) {
+    currentUser = { loggedIn: true, nombre: r.nombre, esAdmin: false };
+    updateNav(currentUser);
+    showSection('predicciones');
+  } else {
+    showMsg('authMsg', r.error, 'error');
+  }
+}
+
+async function doLogout() {
+  await api('/api/logout', {method:'POST'});
+  currentUser = { loggedIn: false };
+  updateNav(currentUser);
+  showSection('auth');
+}
+
+// TABLA
+async function loadTabla() {
+  const [tabla, partidos] = await Promise.all([api('/api/tabla'), api('/api/partidos')]);
+  const completados = partidos.filter(p => p.completado).length;
+  const container = document.getElementById('tablaContainer');
+
+  if (!tabla.length) {
+    container.innerHTML = '<div class="loading">No hay participantes aún.</div>';
+    return;
+  }
+
+  let html = `<table>
+    <thead><tr>
+      <th>#</th><th>Nombre</th><th>Puntos</th><th>Exactos 🎯</th><th>Ganador ✓</th><th>Predicciones</th>
+    </tr></thead><tbody>`;
+
+  tabla.forEach((u, i) => {
+    const posClass = u.posicion <= 3 ? `pos-${u.posicion}` : 'pos-other';
+    const medalPre = ['', '🥇', '🥈', '🥉'][u.posicion] || '';
+    html += `<tr>
+      <td><span class="pos-badge ${posClass}">${u.posicion}</span></td>
+      <td><strong>${medalPre} ${u.nombre}</strong></td>
+      <td><span class="puntos-badge">${u.puntos_total}</span></td>
+      <td>${u.exactos}</td>
+      <td>${u.ganador_correcto}</td>
+      <td>${u.predicciones_total}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  document.getElementById('statsGrid').style.display = '';
+  document.getElementById('statParticipantes').textContent = tabla.length;
+  document.getElementById('statPartidosJugados').textContent = completados;
+  document.getElementById('statMaxPuntos').textContent = tabla[0]?.puntos_total || 0;
+}
+
+// PREDICCIONES
+async function loadPredicciones() {
+  if (!currentUser?.loggedIn) {
+    document.getElementById('predLoginMsg').style.display = '';
+    document.getElementById('predContent').style.display = 'none';
+    return;
+  }
+  document.getElementById('predLoginMsg').style.display = 'none';
+  document.getElementById('predContent').style.display = '';
+
+  const [partidos, predicciones] = await Promise.all([api('/api/partidos'), api('/api/predicciones')]);
+  todosPartidos = partidos;
+  misPredicciones = {};
+  predicciones.forEach(p => { misPredicciones[p.partido_id] = p; });
+  cambiosPendientes = {};
+
+  renderPartidos(partidos);
+}
+
+function renderPartidos(partidos) {
+  const grupos = {};
+  partidos.forEach(p => {
+    const key = p.grupo ? `Grupo ${p.grupo}` : p.fase;
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(p);
+  });
+
+  let html = '';
+  for (const [grupo, ps] of Object.entries(grupos)) {
+    html += `<div class="grupo-title">⚽ ${grupo}</div>`;
+    html += `<div class="card" style="padding:12px 20px;">`;
+    ps.forEach(p => {
+      const pred = misPredicciones[p.id];
+      const disabled = p.completado ? 'disabled' : '';
+      const localVal = pred ? pred.goles_local : '';
+      const visitVal = pred ? pred.goles_visitante : '';
+
+      let puntosHTML = '';
+      if (p.completado && pred) {
+        if (pred.puntos === 3) puntosHTML = `<span class="pred-points pred-exacto">🎯 +3</span>`;
+        else if (pred.puntos === 1) puntosHTML = `<span class="pred-points pred-correcto">✓ +1</span>`;
+        else puntosHTML = `<span class="pred-points pred-fallo">✗ 0</span>`;
+      }
+
+      const resultadoReal = p.completado ? `<span style="font-weight:900;color:var(--verde);">${p.goles_local}–${p.goles_visitante}</span>` : '';
+
+      html += `<div class="partido-row">
+        <div class="equipo equipo-local">${p.equipo_local}</div>
+        <div>
+          <div class="vs-box">
+            <input class="score-input" type="number" min="0" max="20" value="${localVal}"
+              ${disabled} data-partido="${p.id}" data-tipo="local"
+              oninput="markChanged(${p.id})">
+            <span class="vs-sep">–</span>
+            <input class="score-input" type="number" min="0" max="20" value="${visitVal}"
+              ${disabled} data-partido="${p.id}" data-tipo="visitante"
+              oninput="markChanged(${p.id})">
+          </div>
+          <div class="partido-info">
+            ${p.fecha || ''} · ${p.estadio || ''}
+            ${p.completado ? `<span class="fase-badge">Resultado: ${resultadoReal}</span>` : ''}
+            ${puntosHTML}
+          </div>
+        </div>
+        <div class="equipo equipo-visitante">${p.equipo_visitante}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('partidosContainer').innerHTML = html;
+}
+
+function markChanged(partidoId) {
+  cambiosPendientes[partidoId] = true;
+  document.getElementById('saveFloatBtn').classList.remove('hidden');
+}
+
+async function savePrediccionesAll() {
+  const predicciones = [];
+  const inputs = document.querySelectorAll('.score-input');
+  const byPartido = {};
+  inputs.forEach(inp => {
+    const pid = inp.dataset.partido;
+    const tipo = inp.dataset.tipo;
+    if (!byPartido[pid]) byPartido[pid] = {};
+    byPartido[pid][tipo] = inp.value;
+  });
+
+  for (const [pid, vals] of Object.entries(byPartido)) {
+    if (vals.local !== '' && vals.visitante !== '') {
+      predicciones.push({
+        partido_id: parseInt(pid),
+        goles_local: parseInt(vals.local),
+        goles_visitante: parseInt(vals.visitante)
+      });
+    }
+  }
+
+  const r = await api('/api/predicciones', {method:'POST', body: JSON.stringify({predicciones})});
+  if (r.ok) {
+    cambiosPendientes = {};
+    document.getElementById('saveFloatBtn').classList.add('hidden');
+    // Visual feedback
+    const btn = document.getElementById('saveFloatBtn');
+    btn.textContent = '✅ ¡Guardado!';
+    btn.classList.remove('hidden');
+    setTimeout(() => btn.classList.add('hidden'), 2000);
+    await loadPredicciones();
+  }
+}
+
+// ADMIN
+async function loadAdmin() {
+  const [partidos, cfg, usuarios] = await Promise.all([
+    api('/api/partidos'), api('/api/admin/config'), api('/api/admin/usuarios')
+  ]);
+
+  // Config
+  document.getElementById('cfgNombre').value = cfg.nombre_quiniela || '';
+  document.getElementById('cfgPremio1').value = cfg.premio_1 || '';
+  document.getElementById('cfgPremio2').value = cfg.premio_2 || '';
+  document.getElementById('cfgPremio3').value = cfg.premio_3 || '';
+  document.getElementById('cfgCosto').value = cfg.costo_participacion || '';
+  document.getElementById('cfgActiva').value = cfg.activa || '1';
+
+  // Partidos
+  const grupos = {};
+  partidos.forEach(p => {
+    const key = p.grupo ? `Grupo ${p.grupo}` : p.fase;
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(p);
+  });
+
+  let html = '';
+  for (const [grupo, ps] of Object.entries(grupos)) {
+    html += `<div class="grupo-title">⚽ ${grupo}</div>`;
+    ps.forEach(p => {
+      const badge = p.completado
+        ? `<span class="completado-badge">✅ ${p.goles_local}–${p.goles_visitante}</span>`
+        : `<span class="pendiente-badge">⏳ Pendiente</span>`;
+      html += `<div class="admin-partido">
+        <span style="font-weight:600;">${p.equipo_local} vs ${p.equipo_visitante}</span>
+        <span style="font-size:0.8rem;color:var(--text-light);">${p.fecha||''}</span>
+        ${badge}
+        ${!p.completado ? `<div class="admin-result-form">
+          <input class="score-input" type="number" min="0" id="res_local_${p.id}" placeholder="0">
+          <span class="vs-sep">–</span>
+          <input class="score-input" type="number" min="0" id="res_visit_${p.id}" placeholder="0">
+          <button class="btn btn-primary btn-sm" onclick="guardarResultado(${p.id})">Guardar</button>
+        </div>` : ''}
+      </div>`;
+    });
+  }
+  document.getElementById('adminPartidosContainer').innerHTML = html;
+
+  // Usuarios
+  let uHtml = `<table><thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Fecha registro</th></tr></thead><tbody>`;
+  usuarios.forEach((u, i) => {
+    uHtml += `<tr><td>${i+1}</td><td>${u.nombre}</td><td>${u.email}</td><td>${u.telefono||'—'}</td><td>${u.fecha_registro?.split('T')[0]||''}</td></tr>`;
+  });
+  uHtml += '</tbody></table>';
+  document.getElementById('usuariosContainer').innerHTML = uHtml;
+}
+
+async function guardarResultado(partidoId) {
+  const gl = document.getElementById('res_local_' + partidoId)?.value;
+  const gv = document.getElementById('res_visit_' + partidoId)?.value;
+  if (gl === '' || gv === '') return alert('Ingresa ambos marcadores');
+  await api('/api/admin/resultado', {method:'POST', body: JSON.stringify({
+    partido_id: partidoId, goles_local: parseInt(gl), goles_visitante: parseInt(gv)
+  })});
+  loadAdmin();
+}
+
+async function saveConfig() {
+  const data = {
+    nombre_quiniela: document.getElementById('cfgNombre').value,
+    premio_1: document.getElementById('cfgPremio1').value,
+    premio_2: document.getElementById('cfgPremio2').value,
+    premio_3: document.getElementById('cfgPremio3').value,
+    costo_participacion: document.getElementById('cfgCosto').value,
+    activa: document.getElementById('cfgActiva').value,
+  };
+  await api('/api/admin/config', {method:'POST', body: JSON.stringify(data)});
+  loadConfig();
+  alert('✅ Configuración guardada');
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    e.preventDefault();
+    if (Object.keys(cambiosPendientes).length > 0) savePrediccionesAll();
+  }
+});
+
+init();
+</script>
+</body>
+</html>
