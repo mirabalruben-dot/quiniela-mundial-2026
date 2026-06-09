@@ -1,7 +1,12 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const db = new Database(path.join(__dirname, 'quiniela.db'));
+// En Render usar disco persistente, en local usar directorio del proyecto
+const DB_DIR = process.env.RENDER ? '/var/data' : __dirname;
+if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+
+const db = new Database(path.join(DB_DIR, 'quiniela.db'));
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS usuarios (
