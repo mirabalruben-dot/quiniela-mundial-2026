@@ -50,7 +50,7 @@ const requireAdmin = (req, res, next) => {
 // --- AUTH ---
 app.post('/api/register', (req, res) => {
   const { nombre, apodo, email, telefono, password } = req.body;
-  if (!nombre || !apodo || !email || !password) return res.status(400).json({ error: 'Campos requeridos' });
+  if (!nombre || !apodo || !email || !password || !telefono) return res.status(400).json({ error: 'Todos los campos son requeridos, incluyendo el teléfono' });
 
   const config = db.prepare('SELECT valor FROM configuracion WHERE clave = ?').get('activa');
   if (config?.valor !== '1') return res.status(403).json({ error: 'La quiniela está cerrada para nuevos registros' });

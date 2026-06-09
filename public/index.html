@@ -361,7 +361,7 @@
           <input type="email" id="regEmail" placeholder="tu@email.com">
         </div>
         <div class="form-group">
-          <label>Teléfono (opcional)</label>
+          <label>Teléfono</label>
           <input type="tel" id="regTelefono" placeholder="+1 404 287-8898">
         </div>
         <div class="form-group">
@@ -672,6 +672,7 @@ async function doRegister() {
   const telefono = document.getElementById('regTelefono').value;
   const password = document.getElementById('regPassword').value;
   if (!apodo.trim()) return showMsg('authMsg', 'El apodo es requerido', 'error');
+  if (!telefono.trim()) return showMsg('authMsg', 'El teléfono es requerido', 'error');
   const r = await api('/api/register', {method:'POST', body: JSON.stringify({nombre, apodo, email, telefono, password})});
   if (r.ok) {
     currentUser = { loggedIn: true, nombre: r.nombre, apodo: r.apodo, esAdmin: false };
