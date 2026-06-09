@@ -724,6 +724,23 @@ function renderPartidos(partidos) {
     html += `<div class="grupo-title">⚽ ${grupo}</div>`;
     html += `<div class="card" style="padding:12px 20px;">`;
     ps.forEach(p => {
+      const esPendiente = p.equipo_local.includes('Ganador') || p.equipo_local.includes('1ro') || p.equipo_local.includes('2do') || p.equipo_local.includes('Perdedor');
+
+      // Partido con equipos aún no definidos — mostrar aviso
+      if (esPendiente) {
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.3rem;">⏳</span>
+            <div>
+              <div style="font-size:0.85rem;font-weight:600;color:var(--text-light);">${p.equipo_local} vs ${p.equipo_visitante}</div>
+              <div style="font-size:0.75rem;color:var(--text-light);">${p.fecha || ''} · ${p.estadio || ''}</div>
+            </div>
+          </div>
+          <span style="background:#fff3cd;color:#856404;padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;">🔜 Predicciones disponibles próximamente</span>
+        </div>`;
+        return;
+      }
+
       const pred = misPredicciones[p.id];
       const disabled = p.completado ? 'disabled' : '';
       const localVal = pred ? pred.goles_local : '';
