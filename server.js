@@ -22,6 +22,21 @@ app.use(session({
   }
 }));
 
+// Verifica si un partido ya cerró predicciones (30 min antes del inicio)
+// Fechas en formato "2026-06-11 20:00 ET" (EDT = UTC-4 en verano)
+function partidoIniciado(fecha) {
+  if (!fecha) return false;
+  try {
+    const partes = fecha.split(' ');
+    const [y, m, d] = partes[0].split('-').map(Number);
+    const [h, min] = (partes[1] || '00:00').split(':').map(Number);
+    // EDT (Eastern Daylight Time) = UTC-4 durante Jun-Jul 2026
+    const utcMs = Date.UTC(y, m - 1, d, h + 4, min);
+    const cierre = utcMs - (30 * 60 * 1000); // 30 min antes
+    return Date.now() >= cierre;
+  } catch(e) { return false; }
+}
+
 const requireAuth = (req, res, next) => {
   if (!req.session.userId) return res.status(401).json({ error: 'No autorizado' });
   next();
@@ -127,8 +142,13 @@ app.get('/api/me', (req, res) => {
 
 // --- PARTIDOS ---
 app.get('/api/partidos', (req, res) => {
-  const partidos = db.prepare('SELECT * FROM partidos ORDER BY fase, grupo, fecha, id').all();
-  res.json(partidos);
+  const partidos = db.prepare('SELECT * FROM partidos ORDER BY numero').all();
+  // Agregar campo bloqueado: true si faltan menos de 30 min para el inicio
+  const resultado = partidos.map(p => ({
+    ...p,
+    bloqueado: p.completado ? true : partidoIniciado(p.fecha)
+  }));
+  res.json(resultado);
 });
 
 // --- PREDICCIONES ---
@@ -155,9 +175,10 @@ app.post('/api/predicciones', requireAuth, (req, res) => {
 
   const insertMany = db.transaction((preds) => {
     for (const p of preds) {
-      // Verificar que el partido no esté completado
-      const partido = db.prepare('SELECT completado FROM partidos WHERE id = ?').get(p.partido_id);
+      const partido = db.prepare('SELECT completado, fecha FROM partidos WHERE id = ?').get(p.partido_id);
       if (!partido || partido.completado) continue;
+      // Bloquear 30 minutos antes del inicio
+      if (partido.fecha && partidoIniciado(partido.fecha)) continue;
       upsert.run(req.session.userId, p.partido_id, p.goles_local, p.goles_visitante);
     }
   });

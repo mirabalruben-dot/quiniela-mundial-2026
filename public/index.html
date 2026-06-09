@@ -781,8 +781,8 @@ async function loadPredicciones() {
 
 function renderPartidos(partidos) {
   // Contar predicciones completadas
-  const totalDisponibles = partidos.filter(p => !p.completado && !esPendienteEquipo(p)).length;
-  const totalPredichas = partidos.filter(p => !p.completado && !esPendienteEquipo(p) && misPredicciones[p.id]).length;
+  const totalDisponibles = partidos.filter(p => !p.bloqueado && !esPendienteEquipo(p)).length;
+  const totalPredichas = partidos.filter(p => !p.bloqueado && !esPendienteEquipo(p) && misPredicciones[p.id]).length;
   const pct = totalDisponibles > 0 ? Math.round(totalPredichas / totalDisponibles * 100) : 0;
 
   // Fases en orden
@@ -856,10 +856,10 @@ function renderPartidos(partidos) {
         }
 
         const pred = misPredicciones[p.id];
-        const disabled = p.completado ? 'disabled' : '';
+        const disabled = p.bloqueado ? 'disabled' : '';
         const localVal = pred !== undefined ? pred.goles_local : '';
         const visitVal = pred !== undefined ? pred.goles_visitante : '';
-        const sinPred = !pred && !p.completado;
+        const sinPred = !pred && !p.bloqueado;
 
         let puntosHTML = '';
         if (p.completado && pred) {
@@ -868,8 +868,21 @@ function renderPartidos(partidos) {
           else if (pred.puntos === 1) puntosHTML = `<span class="pred-points pred-correcto">✓ +1</span>`;
           else puntosHTML = `<span class="pred-points pred-fallo">✗ 0</span>`;
         }
+
+        // Badge de estado
+        let estadoBadge = '';
+        if (p.completado) {
+          estadoBadge = `<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:8px;font-size:0.72rem;font-weight:700;">✅ Finalizado</span>`;
+        } else if (p.bloqueado) {
+          estadoBadge = `<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:8px;font-size:0.72rem;font-weight:700;">🔒 Cerrado</span>`;
+        } else if (pred) {
+          estadoBadge = `<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:8px;font-size:0.72rem;font-weight:700;">✓ Guardado</span>`;
+        } else {
+          estadoBadge = `<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:8px;font-size:0.72rem;font-weight:700;">⚠️ Sin predecir</span>`;
+        }
+
         const resultadoReal = p.completado ? `<span style="font-weight:900;color:var(--verde);font-size:0.85rem;">Resultado: ${p.goles_local}–${p.goles_visitante}</span>` : '';
-        const borderColor = sinPred ? 'border-left:3px solid #ffc107;' : p.completado ? '' : 'border-left:3px solid #28a745;';
+        const borderColor = p.completado ? 'border-left:3px solid #28a745;' : p.bloqueado ? 'border-left:3px solid #dc3545;' : sinPred ? 'border-left:3px solid #ffc107;' : 'border-left:3px solid #1a3a6b;';
 
         html += `<div class="partido-row" style="${borderColor}">
           <div class="equipo equipo-local" style="font-size:0.88rem;">${p.equipo_local}</div>
@@ -882,7 +895,7 @@ function renderPartidos(partidos) {
                 ${disabled} data-partido="${p.id}" data-tipo="visitante" oninput="markChanged(${p.id})">
             </div>
             <div class="partido-info">${p.numero ? `<strong>M${p.numero}</strong> · ` : ''}${formatFecha(p.fecha)} · ${p.estadio || ''}</div>
-            <div style="margin-top:2px;">${resultadoReal}${puntosHTML}</div>
+            <div style="margin-top:4px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">${estadoBadge}${resultadoReal}${puntosHTML}</div>
           </div>
           <div class="equipo equipo-visitante" style="font-size:0.88rem;">${p.equipo_visitante}</div>
         </div>`;
