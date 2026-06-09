@@ -47,11 +47,11 @@ db.exec(`
 
 // Configuración por defecto
 const insertConfig = db.prepare(`INSERT OR IGNORE INTO configuracion (clave, valor) VALUES (?, ?)`);
-insertConfig.run('nombre_quiniela', 'Quiniela Mundial 2026');
-insertConfig.run('premio_1', '$1,000');
-insertConfig.run('premio_2', '$500');
-insertConfig.run('premio_3', '$250');
-insertConfig.run('costo_participacion', '$50');
+insertConfig.run('nombre_quiniela', 'Quiniela Insurance USA - Mundial 2026');
+insertConfig.run('premio_1', 'Por definir');
+insertConfig.run('premio_2', 'Por definir');
+insertConfig.run('premio_3', 'Por definir');
+insertConfig.run('costo_participacion', 'GRATIS');
 insertConfig.run('activa', '1');
 insertConfig.run('puntos_resultado_exacto', '3');
 insertConfig.run('puntos_ganador_correcto', '1');

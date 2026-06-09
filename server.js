@@ -194,6 +194,10 @@ app.get('/api/config', (req, res) => {
   res.json(obj);
 });
 
+// Actualizar configuración con valores de Insurance USA
+db.prepare("UPDATE configuracion SET valor = ? WHERE clave = 'nombre_quiniela'").run('Quiniela Insurance USA - Mundial 2026');
+db.prepare("UPDATE configuracion SET valor = ? WHERE clave = 'costo_participacion'").run('GRATIS');
+
 // Crear admin inicial si no existe
 const adminExists = db.prepare('SELECT id FROM usuarios WHERE es_admin = 1').get();
 if (!adminExists) {
