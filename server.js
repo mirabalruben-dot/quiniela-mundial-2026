@@ -215,6 +215,24 @@ if (!adminExists) {
   console.log('Admin creado: admin@quiniela.com / Admin2026!');
 }
 
+// Email de prueba
+app.post('/api/admin/test-email', requireAdmin, async (req, res) => {
+  const { sendEmail } = require('./emails');
+  const { email } = req.body;
+  await sendEmail({
+    to: email,
+    nombre: 'Administrador',
+    asunto: '✅ Email de prueba - Quiniela Insurance USA 2026',
+    titulo: '¡El sistema de emails funciona!',
+    mensaje: `Este es un email de prueba enviado desde la Quiniela Insurance USA 2026.
+              Los participantes recibirán notificaciones automáticas cuando se abran nuevas fases
+              y recordatorios 24 horas antes de que cierren las predicciones.`,
+    cta_texto: '⚽ Ver la quiniela',
+    cta_url: process.env.APP_URL || 'https://quiniela-mundial-2026-rcqj.onrender.com',
+  });
+  res.json({ ok: true });
+});
+
 // Endpoint admin para forzar actualización manual
 app.post('/api/admin/sync-resultados', requireAdmin, async (req, res) => {
   await fetchFinishedMatches();

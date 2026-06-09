@@ -482,12 +482,24 @@
       </div>
 
       <!-- Sync automático -->
-      <div style="background:#e8f4fd;border-radius:12px;padding:14px;margin-bottom:20px;border:1.5px solid #bee3f8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div style="background:#e8f4fd;border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid #bee3f8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div>
           <strong style="font-size:0.95rem;">🤖 Actualización automática de resultados</strong><br>
           <span style="font-size:0.8rem;color:var(--text-light);">Se sincroniza cada 30 min con API-Football. Puedes forzar ahora.</span>
         </div>
         <button class="btn btn-primary btn-sm" onclick="syncResultados()">⚡ Sincronizar ahora</button>
+      </div>
+
+      <!-- Email de prueba -->
+      <div style="background:#f0fff4;border-radius:12px;padding:14px;margin-bottom:20px;border:1.5px solid #c3e6cb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <strong style="font-size:0.95rem;">📧 Probar sistema de emails</strong><br>
+          <span style="font-size:0.8rem;color:var(--text-light);">Envía un email de prueba para verificar que funciona.</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="email" id="testEmailInput" placeholder="tu@email.com" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85rem;width:200px;">
+          <button class="btn btn-sm" style="background:#28a745;color:white;" onclick="enviarEmailPrueba()">📨 Enviar prueba</button>
+        </div>
       </div>
 
       <!-- Ingresar resultados -->
@@ -873,6 +885,13 @@ async function loadAdmin() {
   });
   uHtml += '</tbody></table>';
   document.getElementById('usuariosContainer').innerHTML = uHtml;
+}
+
+async function enviarEmailPrueba() {
+  const email = document.getElementById('testEmailInput').value;
+  if (!email) return alert('Ingresa un email');
+  const r = await api('/api/admin/test-email', {method:'POST', body: JSON.stringify({email})});
+  alert(r.ok ? '✅ Email enviado! Revisa tu bandeja.' : '❌ Error al enviar');
 }
 
 async function syncResultados() {
