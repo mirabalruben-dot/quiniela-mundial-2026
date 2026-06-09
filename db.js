@@ -55,6 +55,7 @@ insertConfig.run('premio_3', 'Por definir');
 insertConfig.run('costo_participacion', 'GRATIS');
 insertConfig.run('activa', '1');
 insertConfig.run('puntos_resultado_exacto', '3');
+insertConfig.run('puntos_empate_correcto', '2');
 insertConfig.run('puntos_ganador_correcto', '1');
 
 // Insertar partidos de grupo si no existen

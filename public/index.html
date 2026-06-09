@@ -298,8 +298,9 @@
     <div class="card" style="margin-bottom:20px;">
       <h2>🏆 Tabla de Posiciones en Vivo</h2>
       <div class="puntos-info" style="margin-bottom:14px;">
-        <span class="puntos-tag tag-exacto">🎯 3 pts — Resultado exacto</span>
-        <span class="puntos-tag tag-ganador">✓ 1 pt — Ganador correcto</span>
+        <span class="puntos-tag tag-exacto">🎯 3 pts — Exacto</span>
+        <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;">🤝 2 pts — Empate</span>
+        <span class="puntos-tag tag-ganador">✓ 1 pt — Ganador</span>
       </div>
       <div class="tabla-container" id="tablaPublicaContainer">
         <div class="loading" style="padding:20px;color:var(--text-light);">Cargando tabla...</div>
@@ -357,7 +358,7 @@
 
       <hr class="divider">
       <p style="font-size:0.8rem;text-align:center;color:var(--text-light);">
-        Sistema de puntos: <strong>3 pts</strong> resultado exacto · <strong>1 pt</strong> ganador correcto
+        Sistema de puntos: <strong>3 pts</strong> exacto · <strong>2 pts</strong> empate · <strong>1 pt</strong> ganador
       </p>
     </div>
   </div>
@@ -368,6 +369,7 @@
       <h2>🏆 Tabla de Posiciones</h2>
       <div class="puntos-info" style="margin-bottom:16px;">
         <span class="puntos-tag tag-exacto">🎯 3 pts — Resultado exacto</span>
+        <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;">🤝 2 pts — Empate correcto</span>
         <span class="puntos-tag tag-ganador">✓ 1 pt — Ganador correcto</span>
       </div>
       <div class="tabla-container" id="tablaContainer">
@@ -405,6 +407,7 @@
         <p style="color:var(--text-light);font-size:0.88rem;">Ingresa el marcador que predices para cada partido. Solo puedes modificar partidos que aún no han iniciado.</p>
         <div class="puntos-info" style="margin-top:12px;">
           <span class="puntos-tag tag-exacto">🎯 3 pts exacto</span>
+          <span class="puntos-tag" style="background:#d1ecf1;color:#0c5460;">🤝 2 pts empate</span>
           <span class="puntos-tag tag-ganador">✓ 1 pt ganador</span>
         </div>
       </div>
@@ -685,6 +688,7 @@ function renderPartidos(partidos) {
       let puntosHTML = '';
       if (p.completado && pred) {
         if (pred.puntos === 3) puntosHTML = `<span class="pred-points pred-exacto">🎯 +3</span>`;
+        else if (pred.puntos === 2) puntosHTML = `<span class="pred-points" style="background:#d1ecf1;color:#0c5460;font-size:0.75rem;padding:2px 8px;border-radius:10px;font-weight:700;">🤝 +2</span>`;
         else if (pred.puntos === 1) puntosHTML = `<span class="pred-points pred-correcto">✓ +1</span>`;
         else puntosHTML = `<span class="pred-points pred-fallo">✗ 0</span>`;
       }

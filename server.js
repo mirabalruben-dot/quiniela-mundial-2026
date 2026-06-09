@@ -160,8 +160,10 @@ app.post('/api/admin/resultado', requireAdmin, (req, res) => {
 
     if (pred.goles_local === resultadoLocal && pred.goles_visitante === resultadoVisitante) {
       puntos = 3; // Resultado exacto
+    } else if (ganadorReal === 'E' && ganadorPred === 'E') {
+      puntos = 2; // Acertó el empate
     } else if (ganadorPred === ganadorReal) {
-      puntos = 1; // Solo ganador correcto
+      puntos = 1; // Acertó el ganador
     }
 
     db.prepare('UPDATE predicciones SET puntos = ? WHERE id = ?').run(puntos, pred.id);
