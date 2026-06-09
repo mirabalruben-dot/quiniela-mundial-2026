@@ -800,7 +800,7 @@ function renderPartidos(partidos) {
   const FASES_ORDEN = ['Grupos', 'Ronda de 32', 'Octavos de Final', 'Cuartos de Final', 'Semifinales', 'Tercer Lugar', 'Final'];
   const FASE_ICONS = { 'Grupos':'⚽', 'Ronda de 32':'🔵', 'Octavos de Final':'🟡', 'Cuartos de Final':'🟠', 'Semifinales':'🔴', 'Tercer Lugar':'🥉', 'Final':'🏆' };
 
-  // Agrupar por fase → grupo/sección
+  // Agrupar por fase → grupo/sección (grupos en orden alfabético)
   const porFase = {};
   partidos.forEach(p => {
     if (!porFase[p.fase]) porFase[p.fase] = {};
@@ -808,6 +808,12 @@ function renderPartidos(partidos) {
     if (!porFase[p.fase][key]) porFase[p.fase][key] = [];
     porFase[p.fase][key].push(p);
   });
+  // Ordenar grupos alfabéticamente dentro de la fase de grupos
+  if (porFase['Grupos']) {
+    const sorted = {};
+    Object.keys(porFase['Grupos']).sort().forEach(k => sorted[k] = porFase['Grupos'][k]);
+    porFase['Grupos'] = sorted;
+  }
 
   let html = '';
 

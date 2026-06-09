@@ -75,9 +75,9 @@ insertConfig.run('puntos_ganador_correcto', '1');
 // Migración: agregar columna numero si no existe
 try { db.prepare('ALTER TABLE partidos ADD COLUMN numero INTEGER').run(); } catch(e) {}
 
-// Migración: recrear si numeración incorrecta (M27 oficial FIFA = CAN v QAT a las 18:00)
-const checkHora = db.prepare("SELECT equipo_local FROM partidos WHERE numero=27").get();
-if (checkHora && checkHora.equipo_local !== 'Canadá') {
+// Migración: recrear si M15 tiene fecha incorrecta (debe ser 06-15)
+const checkHora = db.prepare("SELECT fecha FROM partidos WHERE numero=15").get();
+if (checkHora && !checkHora.fecha.includes('06-15')) {
   db.prepare('DELETE FROM predicciones').run();
   db.prepare('DELETE FROM partidos').run();
   try { db.prepare("DELETE FROM sqlite_sequence WHERE name='partidos'").run(); } catch(e) {}
@@ -132,7 +132,7 @@ if (countPartidos.cnt === 0) {
     [12,'Grupos','F','Suecia','Túnez',               '2026-06-14 22:00 ET','Estadio BBVA - Monterrey'],
     [13,'Grupos','H','Arabia Saudita','Uruguay',     '2026-06-15 18:00 ET','Hard Rock Stadium - Miami'],
     [14,'Grupos','H','España','Cabo Verde',          '2026-06-15 12:00 ET','Mercedes-Benz Stadium - Atlanta'],
-    [15,'Grupos','G','Irán','Nueva Zelanda',         '2026-06-16 21:00 ET','SoFi Stadium - Los Ángeles'],
+    [15,'Grupos','G','Irán','Nueva Zelanda',         '2026-06-15 21:00 ET','SoFi Stadium - Los Ángeles'],
     [16,'Grupos','G','Bélgica','Egipto',             '2026-06-15 15:00 ET','Lumen Field - Seattle'],
     [17,'Grupos','I','Francia','Senegal',            '2026-06-16 15:00 ET','MetLife Stadium - Nueva York/Nueva Jersey'],
     [18,'Grupos','I','Irak','Noruega',               '2026-06-16 18:00 ET','Gillette Stadium - Boston'],
