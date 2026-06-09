@@ -63,6 +63,15 @@ insertConfig.run('puntos_resultado_exacto', '3');
 insertConfig.run('puntos_empate_correcto', '2');
 insertConfig.run('puntos_ganador_correcto', '1');
 
+// Resetear partidos si son los viejos (versión incorrecta)
+const firstPartido = db.prepare("SELECT equipo_local FROM partidos LIMIT 1").get();
+if (firstPartido && firstPartido.equipo_local === 'México' &&
+    !db.prepare("SELECT id FROM partidos WHERE equipo_local='Sudáfrica' OR equipo_local='Sudáfrica'").get()) {
+  db.prepare('DELETE FROM partidos').run();
+  db.prepare('DELETE FROM predicciones').run();
+  console.log('Partidos viejos eliminados, insertando partidos correctos del Mundial 2026');
+}
+
 // Insertar partidos de grupo si no existen
 const countPartidos = db.prepare('SELECT COUNT(*) as cnt FROM partidos').get();
 if (countPartidos.cnt === 0) {
@@ -72,90 +81,90 @@ if (countPartidos.cnt === 0) {
   `);
 
   const partidosGrupo = [
-    // Grupo A
-    ['Grupos', 'A', 'México', 'Ecuador', '2026-06-11', 'Estadio Azteca'],
-    ['Grupos', 'A', 'Jamaica', 'Venezuela', '2026-06-11', 'SoFi Stadium'],
-    ['Grupos', 'A', 'México', 'Jamaica', '2026-06-15', 'Estadio Azteca'],
-    ['Grupos', 'A', 'Venezuela', 'Ecuador', '2026-06-15', 'Rose Bowl'],
-    ['Grupos', 'A', 'Ecuador', 'Jamaica', '2026-06-19', 'SoFi Stadium'],
-    ['Grupos', 'A', 'Venezuela', 'México', '2026-06-19', 'Estadio Azteca'],
-    // Grupo B
-    ['Grupos', 'B', 'EE.UU.', 'Panamá', '2026-06-12', 'AT&T Stadium'],
-    ['Grupos', 'B', 'Honduras', 'Cuba', '2026-06-12', 'SoFi Stadium'],
-    ['Grupos', 'B', 'EE.UU.', 'Honduras', '2026-06-16', 'AT&T Stadium'],
-    ['Grupos', 'B', 'Cuba', 'Panamá', '2026-06-16', 'Rose Bowl'],
-    ['Grupos', 'B', 'Panamá', 'Honduras', '2026-06-20', 'AT&T Stadium'],
-    ['Grupos', 'B', 'Cuba', 'EE.UU.', '2026-06-20', 'Rose Bowl'],
-    // Grupo C
-    ['Grupos', 'C', 'Canadá', 'Chile', '2026-06-12', 'BMO Field'],
-    ['Grupos', 'C', 'Perú', 'Trinidad y Tobago', '2026-06-12', 'BC Place'],
-    ['Grupos', 'C', 'Canadá', 'Perú', '2026-06-16', 'BMO Field'],
-    ['Grupos', 'C', 'Trinidad y Tobago', 'Chile', '2026-06-16', 'BC Place'],
-    ['Grupos', 'C', 'Chile', 'Perú', '2026-06-20', 'BC Place'],
-    ['Grupos', 'C', 'Trinidad y Tobago', 'Canadá', '2026-06-20', 'BMO Field'],
-    // Grupo D
-    ['Grupos', 'D', 'Argentina', 'Bolivia', '2026-06-13', 'Hard Rock Stadium'],
-    ['Grupos', 'D', 'Guatemala', 'Haití', '2026-06-13', 'AT&T Stadium'],
-    ['Grupos', 'D', 'Argentina', 'Guatemala', '2026-06-17', 'Hard Rock Stadium'],
-    ['Grupos', 'D', 'Haití', 'Bolivia', '2026-06-17', 'AT&T Stadium'],
-    ['Grupos', 'D', 'Bolivia', 'Guatemala', '2026-06-21', 'Hard Rock Stadium'],
-    ['Grupos', 'D', 'Haití', 'Argentina', '2026-06-21', 'AT&T Stadium'],
-    // Grupo E
-    ['Grupos', 'E', 'Brasil', 'Colombia', '2026-06-13', 'Levi\'s Stadium'],
-    ['Grupos', 'E', 'Paraguay', 'Costa Rica', '2026-06-13', 'SoFi Stadium'],
-    ['Grupos', 'E', 'Brasil', 'Paraguay', '2026-06-17', 'Levi\'s Stadium'],
-    ['Grupos', 'E', 'Costa Rica', 'Colombia', '2026-06-17', 'SoFi Stadium'],
-    ['Grupos', 'E', 'Colombia', 'Paraguay', '2026-06-21', 'SoFi Stadium'],
-    ['Grupos', 'E', 'Costa Rica', 'Brasil', '2026-06-21', 'Levi\'s Stadium'],
-    // Grupo F
-    ['Grupos', 'F', 'Francia', 'Marruecos', '2026-06-14', 'MetLife Stadium'],
-    ['Grupos', 'F', 'Bélgica', 'Italia', '2026-06-14', 'Gillette Stadium'],
-    ['Grupos', 'F', 'Francia', 'Bélgica', '2026-06-18', 'MetLife Stadium'],
-    ['Grupos', 'F', 'Italia', 'Marruecos', '2026-06-18', 'Gillette Stadium'],
-    ['Grupos', 'F', 'Marruecos', 'Bélgica', '2026-06-22', 'MetLife Stadium'],
-    ['Grupos', 'F', 'Italia', 'Francia', '2026-06-22', 'Gillette Stadium'],
-    // Grupo G
-    ['Grupos', 'G', 'España', 'Croacia', '2026-06-14', 'SoFi Stadium'],
-    ['Grupos', 'G', 'Portugal', 'Serbia', '2026-06-14', 'Rose Bowl'],
-    ['Grupos', 'G', 'España', 'Portugal', '2026-06-18', 'SoFi Stadium'],
-    ['Grupos', 'G', 'Serbia', 'Croacia', '2026-06-18', 'Rose Bowl'],
-    ['Grupos', 'G', 'Croacia', 'Portugal', '2026-06-22', 'SoFi Stadium'],
-    ['Grupos', 'G', 'Serbia', 'España', '2026-06-22', 'Rose Bowl'],
-    // Grupo H
-    ['Grupos', 'H', 'Alemania', 'Dinamarca', '2026-06-15', 'Soldier Field'],
-    ['Grupos', 'H', 'Países Bajos', 'Polonia', '2026-06-15', 'Arrowhead Stadium'],
-    ['Grupos', 'H', 'Alemania', 'Países Bajos', '2026-06-19', 'Soldier Field'],
-    ['Grupos', 'H', 'Polonia', 'Dinamarca', '2026-06-19', 'Arrowhead Stadium'],
-    ['Grupos', 'H', 'Dinamarca', 'Países Bajos', '2026-06-23', 'Arrowhead Stadium'],
-    ['Grupos', 'H', 'Polonia', 'Alemania', '2026-06-23', 'Soldier Field'],
-    // Grupo I
-    ['Grupos', 'I', 'Inglaterra', 'Nigeria', '2026-06-15', 'MetLife Stadium'],
-    ['Grupos', 'I', 'Irán', 'Egipto', '2026-06-15', 'Lincoln Financial Field'],
-    ['Grupos', 'I', 'Inglaterra', 'Irán', '2026-06-19', 'MetLife Stadium'],
-    ['Grupos', 'I', 'Egipto', 'Nigeria', '2026-06-19', 'Lincoln Financial Field'],
-    ['Grupos', 'I', 'Nigeria', 'Irán', '2026-06-23', 'MetLife Stadium'],
-    ['Grupos', 'I', 'Egipto', 'Inglaterra', '2026-06-23', 'Lincoln Financial Field'],
-    // Grupo J
-    ['Grupos', 'J', 'Japón', 'Arabia Saudita', '2026-06-16', 'SoFi Stadium'],
-    ['Grupos', 'J', 'Corea del Sur', 'Australia', '2026-06-16', 'Lumen Field'],
-    ['Grupos', 'J', 'Japón', 'Corea del Sur', '2026-06-20', 'SoFi Stadium'],
-    ['Grupos', 'J', 'Australia', 'Arabia Saudita', '2026-06-20', 'Lumen Field'],
-    ['Grupos', 'J', 'Arabia Saudita', 'Corea del Sur', '2026-06-24', 'Lumen Field'],
-    ['Grupos', 'J', 'Australia', 'Japón', '2026-06-24', 'SoFi Stadium'],
-    // Grupo K
-    ['Grupos', 'K', 'Uruguay', 'Ecuador', '2026-06-16', 'Hard Rock Stadium'],
-    ['Grupos', 'K', 'Bolivia', 'Senegal', '2026-06-16', 'AT&T Stadium'],
-    ['Grupos', 'K', 'Uruguay', 'Bolivia', '2026-06-20', 'Hard Rock Stadium'],
-    ['Grupos', 'K', 'Senegal', 'Ecuador', '2026-06-20', 'AT&T Stadium'],
-    ['Grupos', 'K', 'Ecuador', 'Bolivia', '2026-06-24', 'Hard Rock Stadium'],
-    ['Grupos', 'K', 'Senegal', 'Uruguay', '2026-06-24', 'AT&T Stadium'],
-    // Grupo L
-    ['Grupos', 'L', 'Turquía', 'Rumania', '2026-06-17', 'AT&T Stadium'],
-    ['Grupos', 'L', 'Ucrania', 'Albania', '2026-06-17', 'NRG Stadium'],
-    ['Grupos', 'L', 'Turquía', 'Ucrania', '2026-06-21', 'AT&T Stadium'],
-    ['Grupos', 'L', 'Albania', 'Rumania', '2026-06-21', 'NRG Stadium'],
-    ['Grupos', 'L', 'Rumania', 'Ucrania', '2026-06-25', 'NRG Stadium'],
-    ['Grupos', 'L', 'Albania', 'Turquía', '2026-06-25', 'AT&T Stadium'],
+    // GRUPO A: México, Sudáfrica, Corea del Sur, Chequia
+    ['Grupos', 'A', 'México', 'Sudáfrica', '2026-06-11', 'Estadio Azteca'],
+    ['Grupos', 'A', 'Corea del Sur', 'Chequia', '2026-06-11', 'SoFi Stadium'],
+    ['Grupos', 'A', 'México', 'Chequia', '2026-06-15', 'Estadio Azteca'],
+    ['Grupos', 'A', 'Sudáfrica', 'Corea del Sur', '2026-06-15', 'SoFi Stadium'],
+    ['Grupos', 'A', 'Chequia', 'Sudáfrica', '2026-06-19', 'Rose Bowl'],
+    ['Grupos', 'A', 'Corea del Sur', 'México', '2026-06-19', 'Estadio Azteca'],
+    // GRUPO B: Canadá, Bosnia-Herzegovina, Qatar, Suiza
+    ['Grupos', 'B', 'Canadá', 'Bosnia-Herzegovina', '2026-06-12', 'BMO Field'],
+    ['Grupos', 'B', 'Qatar', 'Suiza', '2026-06-12', 'BC Place'],
+    ['Grupos', 'B', 'Canadá', 'Qatar', '2026-06-16', 'BMO Field'],
+    ['Grupos', 'B', 'Bosnia-Herzegovina', 'Suiza', '2026-06-16', 'BC Place'],
+    ['Grupos', 'B', 'Suiza', 'Canadá', '2026-06-20', 'BC Place'],
+    ['Grupos', 'B', 'Bosnia-Herzegovina', 'Qatar', '2026-06-20', 'BMO Field'],
+    // GRUPO C: Brasil, Marruecos, Haití, Escocia
+    ['Grupos', 'C', 'Brasil', 'Marruecos', '2026-06-13', 'MetLife Stadium'],
+    ['Grupos', 'C', 'Haití', 'Escocia', '2026-06-13', 'AT&T Stadium'],
+    ['Grupos', 'C', 'Brasil', 'Haití', '2026-06-17', 'MetLife Stadium'],
+    ['Grupos', 'C', 'Marruecos', 'Escocia', '2026-06-17', 'AT&T Stadium'],
+    ['Grupos', 'C', 'Escocia', 'Brasil', '2026-06-21', 'MetLife Stadium'],
+    ['Grupos', 'C', 'Marruecos', 'Haití', '2026-06-21', 'AT&T Stadium'],
+    // GRUPO D: EE.UU., Australia, Paraguay, Turquía
+    ['Grupos', 'D', 'EE.UU.', 'Australia', '2026-06-13', 'SoFi Stadium'],
+    ['Grupos', 'D', 'Paraguay', 'Turquía', '2026-06-13', 'Hard Rock Stadium'],
+    ['Grupos', 'D', 'EE.UU.', 'Paraguay', '2026-06-17', 'SoFi Stadium'],
+    ['Grupos', 'D', 'Australia', 'Turquía', '2026-06-17', 'Hard Rock Stadium'],
+    ['Grupos', 'D', 'Turquía', 'EE.UU.', '2026-06-21', 'SoFi Stadium'],
+    ['Grupos', 'D', 'Australia', 'Paraguay', '2026-06-21', 'Hard Rock Stadium'],
+    // GRUPO E: Alemania, Ecuador, Costa de Marfil, Curazao
+    ['Grupos', 'E', 'Alemania', 'Ecuador', '2026-06-14', 'Levi\'s Stadium'],
+    ['Grupos', 'E', 'Costa de Marfil', 'Curazao', '2026-06-14', 'Arrowhead Stadium'],
+    ['Grupos', 'E', 'Alemania', 'Costa de Marfil', '2026-06-18', 'Levi\'s Stadium'],
+    ['Grupos', 'E', 'Ecuador', 'Curazao', '2026-06-18', 'Arrowhead Stadium'],
+    ['Grupos', 'E', 'Curazao', 'Alemania', '2026-06-22', 'Levi\'s Stadium'],
+    ['Grupos', 'E', 'Ecuador', 'Costa de Marfil', '2026-06-22', 'Arrowhead Stadium'],
+    // GRUPO F: Japón, Países Bajos, Suecia, Túnez
+    ['Grupos', 'F', 'Japón', 'Países Bajos', '2026-06-14', 'Gillette Stadium'],
+    ['Grupos', 'F', 'Suecia', 'Túnez', '2026-06-14', 'Lincoln Financial Field'],
+    ['Grupos', 'F', 'Japón', 'Suecia', '2026-06-18', 'Gillette Stadium'],
+    ['Grupos', 'F', 'Países Bajos', 'Túnez', '2026-06-18', 'Lincoln Financial Field'],
+    ['Grupos', 'F', 'Túnez', 'Japón', '2026-06-22', 'Gillette Stadium'],
+    ['Grupos', 'F', 'Suecia', 'Países Bajos', '2026-06-22', 'Lincoln Financial Field'],
+    // GRUPO G: Bélgica, Egipto, Irán, Nueva Zelanda
+    ['Grupos', 'G', 'Bélgica', 'Egipto', '2026-06-15', 'Soldier Field'],
+    ['Grupos', 'G', 'Irán', 'Nueva Zelanda', '2026-06-15', 'Lumen Field'],
+    ['Grupos', 'G', 'Bélgica', 'Irán', '2026-06-19', 'Soldier Field'],
+    ['Grupos', 'G', 'Egipto', 'Nueva Zelanda', '2026-06-19', 'Lumen Field'],
+    ['Grupos', 'G', 'Nueva Zelanda', 'Bélgica', '2026-06-23', 'Soldier Field'],
+    ['Grupos', 'G', 'Egipto', 'Irán', '2026-06-23', 'Lumen Field'],
+    // GRUPO H: España, Arabia Saudita, Uruguay, Cabo Verde
+    ['Grupos', 'H', 'España', 'Arabia Saudita', '2026-06-15', 'Rose Bowl'],
+    ['Grupos', 'H', 'Uruguay', 'Cabo Verde', '2026-06-15', 'NRG Stadium'],
+    ['Grupos', 'H', 'España', 'Uruguay', '2026-06-19', 'Rose Bowl'],
+    ['Grupos', 'H', 'Arabia Saudita', 'Cabo Verde', '2026-06-19', 'NRG Stadium'],
+    ['Grupos', 'H', 'Cabo Verde', 'España', '2026-06-23', 'Rose Bowl'],
+    ['Grupos', 'H', 'Arabia Saudita', 'Uruguay', '2026-06-23', 'NRG Stadium'],
+    // GRUPO I: Francia, Senegal, Noruega, Irak
+    ['Grupos', 'I', 'Francia', 'Senegal', '2026-06-16', 'MetLife Stadium'],
+    ['Grupos', 'I', 'Noruega', 'Irak', '2026-06-16', 'AT&T Stadium'],
+    ['Grupos', 'I', 'Francia', 'Noruega', '2026-06-20', 'MetLife Stadium'],
+    ['Grupos', 'I', 'Senegal', 'Irak', '2026-06-20', 'AT&T Stadium'],
+    ['Grupos', 'I', 'Irak', 'Francia', '2026-06-24', 'MetLife Stadium'],
+    ['Grupos', 'I', 'Senegal', 'Noruega', '2026-06-24', 'AT&T Stadium'],
+    // GRUPO J: Argentina, Argelia, Austria, Jordania
+    ['Grupos', 'J', 'Argentina', 'Argelia', '2026-06-16', 'Hard Rock Stadium'],
+    ['Grupos', 'J', 'Austria', 'Jordania', '2026-06-16', 'SoFi Stadium'],
+    ['Grupos', 'J', 'Argentina', 'Austria', '2026-06-20', 'Hard Rock Stadium'],
+    ['Grupos', 'J', 'Argelia', 'Jordania', '2026-06-20', 'SoFi Stadium'],
+    ['Grupos', 'J', 'Jordania', 'Argentina', '2026-06-24', 'Hard Rock Stadium'],
+    ['Grupos', 'J', 'Argelia', 'Austria', '2026-06-24', 'SoFi Stadium'],
+    // GRUPO K: Portugal, Colombia, Congo DR, Uzbekistán
+    ['Grupos', 'K', 'Portugal', 'Colombia', '2026-06-17', 'Levi\'s Stadium'],
+    ['Grupos', 'K', 'Congo DR', 'Uzbekistán', '2026-06-17', 'BC Place'],
+    ['Grupos', 'K', 'Portugal', 'Congo DR', '2026-06-21', 'Levi\'s Stadium'],
+    ['Grupos', 'K', 'Colombia', 'Uzbekistán', '2026-06-21', 'BC Place'],
+    ['Grupos', 'K', 'Uzbekistán', 'Portugal', '2026-06-25', 'Levi\'s Stadium'],
+    ['Grupos', 'K', 'Congo DR', 'Colombia', '2026-06-25', 'BC Place'],
+    // GRUPO L: Inglaterra, Croacia, Panamá, Ghana
+    ['Grupos', 'L', 'Inglaterra', 'Croacia', '2026-06-17', 'Gillette Stadium'],
+    ['Grupos', 'L', 'Panamá', 'Ghana', '2026-06-17', 'BMO Field'],
+    ['Grupos', 'L', 'Inglaterra', 'Panamá', '2026-06-21', 'Gillette Stadium'],
+    ['Grupos', 'L', 'Croacia', 'Ghana', '2026-06-21', 'BMO Field'],
+    ['Grupos', 'L', 'Ghana', 'Inglaterra', '2026-06-25', 'Gillette Stadium'],
+    ['Grupos', 'L', 'Croacia', 'Panamá', '2026-06-25', 'BMO Field'],
   ];
 
   for (const p of partidosGrupo) {
