@@ -232,6 +232,50 @@ app.post('/api/admin/test-email', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Recrear partidos eliminatorios si faltan
+app.post('/api/admin/recrear-eliminatorias', requireAdmin, (req, res) => {
+  const count = db.prepare("SELECT COUNT(*) as c FROM partidos WHERE fase != 'Grupos'").get().c;
+  if (count > 0) return res.json({ ok: true, msg: `Ya existen ${count} partidos eliminatorios` });
+
+  const i = db.prepare('INSERT INTO partidos (fase,grupo,equipo_local,equipo_visitante,fecha,estadio) VALUES (?,?,?,?,?,?)');
+  const partidos = [
+    ['Ronda de 32',null,'1ro Grupo A','2do Grupo C','2026-06-28','AT&T Stadium - Dallas'],
+    ['Ronda de 32',null,'1ro Grupo C','2do Grupo A','2026-06-28','Lumen Field - Seattle'],
+    ['Ronda de 32',null,'1ro Grupo B','3ro Grupo','2026-06-28','MetLife Stadium - Nueva York'],
+    ['Ronda de 32',null,'1ro Grupo D','2do Grupo B','2026-06-29','SoFi Stadium - Los Ángeles'],
+    ['Ronda de 32',null,'1ro Grupo E','3ro Grupo','2026-06-29','Hard Rock Stadium - Miami'],
+    ['Ronda de 32',null,'1ro Grupo F','2do Grupo E','2026-06-29','Mercedes-Benz Stadium - Atlanta'],
+    ['Ronda de 32',null,'1ro Grupo G','2do Grupo H','2026-06-30','Estadio Azteca - Ciudad de México'],
+    ['Ronda de 32',null,'1ro Grupo H','2do Grupo G','2026-06-30','Arrowhead Stadium - Kansas City'],
+    ['Ronda de 32',null,'1ro Grupo I','3ro Grupo','2026-06-30','NRG Stadium - Houston'],
+    ['Ronda de 32',null,'1ro Grupo J','2do Grupo I','2026-07-01','Gillette Stadium - Boston'],
+    ['Ronda de 32',null,'1ro Grupo K','3ro Grupo','2026-07-01','BMO Field - Toronto'],
+    ['Ronda de 32',null,'1ro Grupo L','2do Grupo K','2026-07-01','Lincoln Financial Field - Filadelfia'],
+    ['Ronda de 32',null,'2do Grupo D','3ro Grupo','2026-07-02','BC Place - Vancouver'],
+    ['Ronda de 32',null,'2do Grupo F','3ro Grupo','2026-07-02','Estadio BBVA - Monterrey'],
+    ['Ronda de 32',null,'2do Grupo J','3ro Grupo','2026-07-02','Estadio Akron - Guadalajara'],
+    ['Ronda de 32',null,'2do Grupo L','3ro Grupo','2026-07-02','Levi\'s Stadium - San Francisco'],
+    ['Octavos de Final',null,'Ganador R32-1','Ganador R32-2','2026-07-04','MetLife Stadium - Nueva York'],
+    ['Octavos de Final',null,'Ganador R32-3','Ganador R32-4','2026-07-04','AT&T Stadium - Dallas'],
+    ['Octavos de Final',null,'Ganador R32-5','Ganador R32-6','2026-07-05','SoFi Stadium - Los Ángeles'],
+    ['Octavos de Final',null,'Ganador R32-7','Ganador R32-8','2026-07-05','Mercedes-Benz Stadium - Atlanta'],
+    ['Octavos de Final',null,'Ganador R32-9','Ganador R32-10','2026-07-06','Hard Rock Stadium - Miami'],
+    ['Octavos de Final',null,'Ganador R32-11','Ganador R32-12','2026-07-06','Estadio Azteca - Ciudad de México'],
+    ['Octavos de Final',null,'Ganador R32-13','Ganador R32-14','2026-07-07','Lumen Field - Seattle'],
+    ['Octavos de Final',null,'Ganador R32-15','Ganador R32-16','2026-07-07','NRG Stadium - Houston'],
+    ['Cuartos de Final',null,'Ganador OF-1','Ganador OF-2','2026-07-10','MetLife Stadium - Nueva York'],
+    ['Cuartos de Final',null,'Ganador OF-3','Ganador OF-4','2026-07-10','AT&T Stadium - Dallas'],
+    ['Cuartos de Final',null,'Ganador OF-5','Ganador OF-6','2026-07-11','SoFi Stadium - Los Ángeles'],
+    ['Cuartos de Final',null,'Ganador OF-7','Ganador OF-8','2026-07-11','Mercedes-Benz Stadium - Atlanta'],
+    ['Semifinales',null,'Ganador CF-1','Ganador CF-2','2026-07-14','MetLife Stadium - Nueva York'],
+    ['Semifinales',null,'Ganador CF-3','Ganador CF-4','2026-07-15','AT&T Stadium - Dallas'],
+    ['Tercer Lugar',null,'Perdedor SF-1','Perdedor SF-2','2026-07-18','Hard Rock Stadium - Miami'],
+    ['Final',null,'Ganador SF-1','Ganador SF-2','2026-07-19','MetLife Stadium - Nueva York'],
+  ];
+  for (const p of partidos) i.run(...p);
+  res.json({ ok: true, msg: `${partidos.length} partidos eliminatorios creados` });
+});
+
 // Endpoint admin para forzar actualización manual
 app.post('/api/admin/sync-resultados', requireAdmin, async (req, res) => {
   await fetchFinishedMatches();
