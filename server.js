@@ -249,8 +249,28 @@ app.post('/api/admin/resultado', requireAdmin, (req, res) => {
 });
 
 app.get('/api/admin/usuarios', requireAdmin, (req, res) => {
-  const users = db.prepare('SELECT id, nombre, email, telefono, fecha_registro FROM usuarios WHERE es_admin = 0 ORDER BY nombre').all();
+  const users = db.prepare('SELECT id, nombre, apodo, email, telefono, fecha_registro FROM usuarios WHERE es_admin = 0 ORDER BY fecha_registro DESC').all();
   res.json(users);
+});
+
+// Exportar usuarios a CSV
+app.get('/api/admin/exportar-csv', requireAdmin, (req, res) => {
+  const users = db.prepare('SELECT nombre, apodo, email, telefono, fecha_registro FROM usuarios WHERE es_admin = 0 ORDER BY fecha_registro DESC').all();
+  const puntos = db.prepare('SELECT usuario_id, COALESCE(SUM(puntos),0) as pts FROM predicciones GROUP BY usuario_id').all();
+  const ptsMap = {};
+  puntos.forEach(p => ptsMap[p.usuario_id] = p.pts);
+  const usersConPts = db.prepare('SELECT id, nombre, apodo, email, telefono, fecha_registro FROM usuarios WHERE es_admin=0 ORDER BY fecha_registro DESC').all();
+
+  let csv = 'Nombre,Apodo,Email,Telefono,Fecha Registro,Puntos Acumulados\n';
+  usersConPts.forEach(u => {
+    const pts = ptsMap[u.id] || 0;
+    const fecha = u.fecha_registro ? u.fecha_registro.split('T')[0] : '';
+    csv += `"${u.nombre}","${u.apodo}","${u.email}","${u.telefono || ''}","${fecha}","${pts}"\n`;
+  });
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="participantes-quiniela-2026.csv"');
+  res.send('﻿' + csv); // BOM para que Excel lo abra correctamente
 });
 
 app.get('/api/admin/config', requireAdmin, (req, res) => {

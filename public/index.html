@@ -534,7 +534,10 @@
 
     <!-- Lista participantes -->
     <div class="card">
-      <h2>👥 Participantes registrados</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <h2 style="margin:0;">👥 Participantes registrados</h2>
+        <button class="btn btn-primary btn-sm" onclick="exportarCSV()">📥 Exportar a Excel/CSV</button>
+      </div>
       <div class="tabla-container" id="usuariosContainer"><div class="loading">Cargando...</div></div>
     </div>
   </div>
@@ -1020,12 +1023,27 @@ async function loadAdmin() {
   document.getElementById('adminPartidosContainer').innerHTML = html;
 
   // Usuarios
-  let uHtml = `<table><thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Fecha registro</th></tr></thead><tbody>`;
+  let uHtml = `<table><thead><tr><th>#</th><th>Nombre</th><th>Apodo</th><th>Email</th><th>Teléfono</th><th>Registro</th></tr></thead><tbody>`;
+  if (usuarios.length === 0) {
+    uHtml += '<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:20px;">No hay participantes registrados aún</td></tr>';
+  }
   usuarios.forEach((u, i) => {
-    uHtml += `<tr><td>${i+1}</td><td>${u.nombre}</td><td>${u.email}</td><td>${u.telefono||'—'}</td><td>${u.fecha_registro?.split('T')[0]||''}</td></tr>`;
+    uHtml += `<tr>
+      <td>${i+1}</td>
+      <td><strong>${u.nombre}</strong></td>
+      <td><span style="background:var(--border);padding:2px 8px;border-radius:8px;font-size:0.82rem;">⚽ ${u.apodo}</span></td>
+      <td>${u.email}</td>
+      <td>${u.telefono||'—'}</td>
+      <td>${u.fecha_registro?.split('T')[0]||''}</td>
+    </tr>`;
   });
   uHtml += '</tbody></table>';
+  uHtml += `<div style="margin-top:10px;font-size:0.85rem;color:var(--text-light);">Total: <strong>${usuarios.length}</strong> participante${usuarios.length!==1?'s':''}</div>`;
   document.getElementById('usuariosContainer').innerHTML = uHtml;
+}
+
+function exportarCSV() {
+  window.open('/api/admin/exportar-csv', '_blank');
 }
 
 async function recrearEliminatorias() {
