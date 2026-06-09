@@ -744,75 +744,145 @@ async function loadPredicciones() {
 }
 
 function renderPartidos(partidos) {
-  const grupos = {};
+  // Contar predicciones completadas
+  const totalDisponibles = partidos.filter(p => !p.completado && !esPendienteEquipo(p)).length;
+  const totalPredichas = partidos.filter(p => !p.completado && !esPendienteEquipo(p) && misPredicciones[p.id]).length;
+  const pct = totalDisponibles > 0 ? Math.round(totalPredichas / totalDisponibles * 100) : 0;
+
+  // Fases en orden
+  const FASES_ORDEN = ['Grupos', 'Ronda de 32', 'Octavos de Final', 'Cuartos de Final', 'Semifinales', 'Tercer Lugar', 'Final'];
+  const FASE_ICONS = { 'Grupos':'⚽', 'Ronda de 32':'🔵', 'Octavos de Final':'🟡', 'Cuartos de Final':'🟠', 'Semifinales':'🔴', 'Tercer Lugar':'🥉', 'Final':'🏆' };
+
+  // Agrupar por fase → grupo/sección
+  const porFase = {};
   partidos.forEach(p => {
+    if (!porFase[p.fase]) porFase[p.fase] = {};
     const key = p.grupo ? `Grupo ${p.grupo}` : p.fase;
-    if (!grupos[key]) grupos[key] = [];
-    grupos[key].push(p);
+    if (!porFase[p.fase][key]) porFase[p.fase][key] = [];
+    porFase[p.fase][key].push(p);
   });
 
   let html = '';
-  for (const [grupo, ps] of Object.entries(grupos)) {
-    html += `<div class="grupo-title">⚽ ${grupo}</div>`;
-    html += `<div class="card" style="padding:12px 20px;">`;
-    ps.forEach(p => {
-      const esPendiente = p.equipo_local.includes('Ganador') || p.equipo_local.includes('1ro') || p.equipo_local.includes('2do') || p.equipo_local.includes('Perdedor');
 
-      // Partido con equipos aún no definidos — mostrar aviso
-      if (esPendiente) {
-        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:1.3rem;">⏳</span>
-            <div>
-              <div style="font-size:0.85rem;font-weight:600;color:var(--text-light);">${p.equipo_local} vs ${p.equipo_visitante}</div>
-              <div style="font-size:0.75rem;color:var(--text-light);">${p.fecha || ''} · ${p.estadio || ''}</div>
+  // Barra de progreso
+  html += `<div class="card" style="margin-bottom:16px;padding:16px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-weight:700;font-size:0.9rem;color:var(--verde-dark);">📊 Mis predicciones</span>
+      <span style="font-size:0.85rem;color:var(--text-light);">${totalPredichas} de ${totalDisponibles} completadas</span>
+    </div>
+    <div style="background:#e9ecef;border-radius:20px;height:10px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,var(--verde),#2e86c1);height:100%;width:${pct}%;border-radius:20px;transition:width 0.5s;"></div>
+    </div>
+    <div style="text-align:right;font-size:0.78rem;color:var(--text-light);margin-top:4px;">${pct}% completado</div>
+  </div>`;
+
+  // Tabs de fases
+  const fasesDisponibles = FASES_ORDEN.filter(f => porFase[f]);
+  html += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">`;
+  fasesDisponibles.forEach((fase, i) => {
+    const icon = FASE_ICONS[fase] || '⚽';
+    const activa = i === 0 ? 'background:var(--verde);color:white;' : 'background:var(--border);color:var(--text);';
+    html += `<button onclick="mostrarFase('${fase}')" id="tab-fase-${fase.replace(/ /g,'_')}"
+      style="${activa}border:none;padding:7px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;cursor:pointer;">
+      ${icon} ${fase}
+    </button>`;
+  });
+  html += `</div>`;
+
+  // Contenido de cada fase
+  fasesDisponibles.forEach((fase, fi) => {
+    const display = fi === 0 ? '' : 'display:none;';
+    html += `<div id="fase-content-${fase.replace(/ /g,'_')}" style="${display}">`;
+
+    const grupos = porFase[fase];
+    for (const [grupo, ps] of Object.entries(grupos)) {
+      const pendientesGrupo = ps.filter(p => !esPendienteEquipo(p) && !p.completado && !misPredicciones[p.id]).length;
+      const badgePend = pendientesGrupo > 0 ? `<span style="background:#fff3cd;color:#856404;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:700;margin-left:8px;">${pendientesGrupo} pendientes</span>` : `<span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:700;margin-left:8px;">✓ Listo</span>`;
+
+      if (fase === 'Grupos') {
+        html += `<div class="grupo-title">${FASE_ICONS[fase]} ${grupo} ${badgePend}</div>`;
+      }
+      html += `<div class="card" style="padding:8px 16px;margin-bottom:12px;">`;
+
+      ps.forEach(p => {
+        if (esPendienteEquipo(p)) {
+          html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span>⏳</span>
+              <div>
+                <div style="font-size:0.82rem;font-weight:600;color:var(--text-light);">${p.equipo_local} vs ${p.equipo_visitante}</div>
+                <div style="font-size:0.72rem;color:var(--text-light);">${formatFecha(p.fecha)} · ${p.estadio || ''}</div>
+              </div>
             </div>
+            <span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:700;">🔜 Próximamente</span>
+          </div>`;
+          return;
+        }
+
+        const pred = misPredicciones[p.id];
+        const disabled = p.completado ? 'disabled' : '';
+        const localVal = pred !== undefined ? pred.goles_local : '';
+        const visitVal = pred !== undefined ? pred.goles_visitante : '';
+        const sinPred = !pred && !p.completado;
+
+        let puntosHTML = '';
+        if (p.completado && pred) {
+          if (pred.puntos === 3) puntosHTML = `<span class="pred-points pred-exacto">🎯 +3</span>`;
+          else if (pred.puntos === 2) puntosHTML = `<span class="pred-points" style="background:#d1ecf1;color:#0c5460;font-size:0.75rem;padding:2px 8px;border-radius:10px;font-weight:700;">🤝 +2</span>`;
+          else if (pred.puntos === 1) puntosHTML = `<span class="pred-points pred-correcto">✓ +1</span>`;
+          else puntosHTML = `<span class="pred-points pred-fallo">✗ 0</span>`;
+        }
+        const resultadoReal = p.completado ? `<span style="font-weight:900;color:var(--verde);font-size:0.85rem;">Resultado: ${p.goles_local}–${p.goles_visitante}</span>` : '';
+        const borderColor = sinPred ? 'border-left:3px solid #ffc107;' : p.completado ? '' : 'border-left:3px solid #28a745;';
+
+        html += `<div class="partido-row" style="${borderColor}">
+          <div class="equipo equipo-local" style="font-size:0.88rem;">${p.equipo_local}</div>
+          <div style="text-align:center;">
+            <div class="vs-box">
+              <input class="score-input" type="number" min="0" max="20" value="${localVal}"
+                ${disabled} data-partido="${p.id}" data-tipo="local" oninput="markChanged(${p.id})">
+              <span class="vs-sep">–</span>
+              <input class="score-input" type="number" min="0" max="20" value="${visitVal}"
+                ${disabled} data-partido="${p.id}" data-tipo="visitante" oninput="markChanged(${p.id})">
+            </div>
+            <div class="partido-info">${formatFecha(p.fecha)} · ${p.estadio || ''}</div>
+            <div style="margin-top:2px;">${resultadoReal}${puntosHTML}</div>
           </div>
-          <span style="background:#fff3cd;color:#856404;padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;">🔜 Predicciones disponibles próximamente</span>
+          <div class="equipo equipo-visitante" style="font-size:0.88rem;">${p.equipo_visitante}</div>
         </div>`;
-        return;
-      }
-
-      const pred = misPredicciones[p.id];
-      const disabled = p.completado ? 'disabled' : '';
-      const localVal = pred ? pred.goles_local : '';
-      const visitVal = pred ? pred.goles_visitante : '';
-
-      let puntosHTML = '';
-      if (p.completado && pred) {
-        if (pred.puntos === 3) puntosHTML = `<span class="pred-points pred-exacto">🎯 +3</span>`;
-        else if (pred.puntos === 2) puntosHTML = `<span class="pred-points" style="background:#d1ecf1;color:#0c5460;font-size:0.75rem;padding:2px 8px;border-radius:10px;font-weight:700;">🤝 +2</span>`;
-        else if (pred.puntos === 1) puntosHTML = `<span class="pred-points pred-correcto">✓ +1</span>`;
-        else puntosHTML = `<span class="pred-points pred-fallo">✗ 0</span>`;
-      }
-
-      const resultadoReal = p.completado ? `<span style="font-weight:900;color:var(--verde);">${p.goles_local}–${p.goles_visitante}</span>` : '';
-
-      html += `<div class="partido-row">
-        <div class="equipo equipo-local">${p.equipo_local}</div>
-        <div>
-          <div class="vs-box">
-            <input class="score-input" type="number" min="0" max="20" value="${localVal}"
-              ${disabled} data-partido="${p.id}" data-tipo="local"
-              oninput="markChanged(${p.id})">
-            <span class="vs-sep">–</span>
-            <input class="score-input" type="number" min="0" max="20" value="${visitVal}"
-              ${disabled} data-partido="${p.id}" data-tipo="visitante"
-              oninput="markChanged(${p.id})">
-          </div>
-          <div class="partido-info">
-            ${p.fecha || ''} · ${p.estadio || ''}
-            ${p.completado ? `<span class="fase-badge">Resultado: ${resultadoReal}</span>` : ''}
-            ${puntosHTML}
-          </div>
-        </div>
-        <div class="equipo equipo-visitante">${p.equipo_visitante}</div>
-      </div>`;
-    });
-    html += '</div>';
-  }
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+  });
 
   document.getElementById('partidosContainer').innerHTML = html;
+}
+
+function esPendienteEquipo(p) {
+  return p.equipo_local.includes('Ganador') || p.equipo_local.includes('1ro') ||
+         p.equipo_local.includes('2do') || p.equipo_local.includes('Perdedor');
+}
+
+function formatFecha(fecha) {
+  if (!fecha) return '';
+  const meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const [y, m, d] = fecha.split('-');
+  return `${parseInt(d)} ${meses[parseInt(m)]}`;
+}
+
+function mostrarFase(fase) {
+  // Ocultar todas
+  document.querySelectorAll('[id^="fase-content-"]').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('[id^="tab-fase-"]').forEach(btn => {
+    btn.style.background = 'var(--border)'; btn.style.color = 'var(--text)';
+  });
+  // Mostrar seleccionada
+  const key = fase.replace(/ /g,'_');
+  const el = document.getElementById('fase-content-' + key);
+  const tab = document.getElementById('tab-fase-' + key);
+  if (el) el.style.display = '';
+  if (tab) { tab.style.background = 'var(--verde)'; tab.style.color = 'white'; }
 }
 
 function markChanged(partidoId) {
