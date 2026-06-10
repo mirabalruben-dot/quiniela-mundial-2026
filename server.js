@@ -1,26 +1,31 @@
 const express = require('express');
-const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const path = require('path');
 const db = require('./db');
 const { startAutoResults, fetchFinishedMatches } = require('./auto-results');
 const { notificarRecordatorio, sendEmail } = require('./emails');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'quiniela-mundial-2026-jwt-secret';
+const JWT_EXPIRES = '30d'; // 30 días
+
 const app = express();
-app.set('trust proxy', 1); // Necesario para cookies seguras detrás de Render/proxy
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-  secret: 'quiniela-mundial-2026-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: 'none',
-    secure: true
-  }
-}));
+
+// Middleware de autenticación por JWT (compatible con Safari/iframe)
+function getTokenFromRequest(req) {
+  // Primero busca en Authorization header, luego en body/query
+  const auth = req.headers['authorization'];
+  if (auth && auth.startsWith('Bearer ')) return auth.slice(7);
+  return null;
+}
+
+function verifyToken(token) {
+  try { return jwt.verify(token, JWT_SECRET); } catch(e) { return null; }
+}
 
 // Verifica si un partido ya cerró predicciones (30 min antes del inicio)
 // Fechas en formato "2026-06-11 20:00 ET" (EDT = UTC-4 en verano)
@@ -38,12 +43,22 @@ function partidoIniciado(fecha) {
 }
 
 const requireAuth = (req, res, next) => {
-  if (!req.session.userId) return res.status(401).json({ error: 'No autorizado' });
+  const token = getTokenFromRequest(req);
+  const payload = token ? verifyToken(token) : null;
+  if (!payload) return res.status(401).json({ error: 'No autorizado' });
+  req.userId = payload.userId;
+  req.nombre = payload.nombre;
+  req.apodo = payload.apodo;
+  req.esAdmin = payload.esAdmin;
   next();
 };
 
 const requireAdmin = (req, res, next) => {
-  if (!req.session.userId || !req.session.esAdmin) return res.status(403).json({ error: 'Acceso denegado' });
+  const token = getTokenFromRequest(req);
+  const payload = token ? verifyToken(token) : null;
+  if (!payload || !payload.esAdmin) return res.status(403).json({ error: 'Acceso denegado' });
+  req.userId = payload.userId;
+  req.esAdmin = payload.esAdmin;
   next();
 };
 
@@ -59,11 +74,8 @@ app.post('/api/register', (req, res) => {
   try {
     const stmt = db.prepare('INSERT INTO usuarios (nombre, apodo, email, telefono, password) VALUES (?, ?, ?, ?, ?)');
     const result = stmt.run(nombre, apodo.trim(), email, telefono || '', hash);
-    req.session.userId = result.lastInsertRowid;
-    req.session.nombre = nombre;
-    req.session.apodo = apodo.trim();
-    req.session.esAdmin = false;
-    res.json({ ok: true, nombre, apodo: apodo.trim() });
+    const token = jwt.sign({ userId: result.lastInsertRowid, nombre, apodo: apodo.trim(), esAdmin: false }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    res.json({ ok: true, nombre, apodo: apodo.trim(), token });
   } catch (e) {
     if (e.message.includes('apodo')) return res.status(400).json({ error: 'Ese apodo ya está en uso, elige otro' });
     res.status(400).json({ error: 'El email ya está registrado' });
@@ -76,11 +88,8 @@ app.post('/api/login', (req, res) => {
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(401).json({ error: 'Email o contraseña incorrectos' });
   }
-  req.session.userId = user.id;
-  req.session.nombre = user.nombre;
-  req.session.apodo = user.apodo;
-  req.session.esAdmin = !!user.es_admin;
-  res.json({ ok: true, nombre: user.nombre, apodo: user.apodo, esAdmin: !!user.es_admin });
+  const token = jwt.sign({ userId: user.id, nombre: user.nombre, apodo: user.apodo, esAdmin: !!user.es_admin }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+  res.json({ ok: true, nombre: user.nombre, apodo: user.apodo, esAdmin: !!user.es_admin, token });
 });
 
 // RECUPERAR CONTRASEÑA — solicitar reset
@@ -131,13 +140,14 @@ app.post('/api/reset-password', (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
-  req.session.destroy();
-  res.json({ ok: true });
+  res.json({ ok: true }); // El cliente elimina el token de localStorage
 });
 
 app.get('/api/me', (req, res) => {
-  if (!req.session.userId) return res.json({ loggedIn: false });
-  res.json({ loggedIn: true, nombre: req.session.nombre, apodo: req.session.apodo, esAdmin: req.session.esAdmin, userId: req.session.userId });
+  const token = getTokenFromRequest(req);
+  const payload = token ? verifyToken(token) : null;
+  if (!payload) return res.json({ loggedIn: false });
+  res.json({ loggedIn: true, nombre: payload.nombre, apodo: payload.apodo, esAdmin: payload.esAdmin, userId: payload.userId });
 });
 
 // --- PARTIDOS ---
@@ -158,7 +168,7 @@ app.get('/api/predicciones', requireAuth, (req, res) => {
     FROM predicciones p
     JOIN partidos par ON par.id = p.partido_id
     WHERE p.usuario_id = ?
-  `).all(req.session.userId);
+  `).all(req.userId);
   res.json(preds);
 });
 
@@ -179,7 +189,7 @@ app.post('/api/predicciones', requireAuth, (req, res) => {
       if (!partido || partido.completado) continue;
       // Bloquear 30 minutos antes del inicio
       if (partido.fecha && partidoIniciado(partido.fecha)) continue;
-      upsert.run(req.session.userId, p.partido_id, p.goles_local, p.goles_visitante);
+      upsert.run(req.userId, p.partido_id, p.goles_local, p.goles_visitante);
     }
   });
 

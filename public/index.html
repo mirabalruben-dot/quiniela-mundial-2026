@@ -561,8 +561,16 @@ let todosPartidos = [];
 let misPredicciones = {};
 let cambiosPendientes = {};
 
+// JWT en localStorage — funciona en Safari/iframe sin problemas de cookies
+function getToken() { return localStorage.getItem('qtoken'); }
+function setToken(t) { localStorage.setItem('qtoken', t); }
+function clearToken() { localStorage.removeItem('qtoken'); }
+
 async function api(url, opts={}) {
-  const r = await fetch(url, { headers: {'Content-Type':'application/json'}, ...opts });
+  const token = getToken();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const r = await fetch(url, { headers, ...opts });
   return r.json();
 }
 
@@ -662,7 +670,8 @@ async function doLogin() {
   const password = document.getElementById('loginPassword').value;
   const r = await api('/api/login', {method:'POST', body: JSON.stringify({email, password})});
   if (r.ok) {
-    currentUser = { loggedIn: true, nombre: r.nombre, esAdmin: r.esAdmin };
+    if (r.token) setToken(r.token);
+    currentUser = { loggedIn: true, nombre: r.nombre, apodo: r.apodo, esAdmin: r.esAdmin };
     updateNav(currentUser);
     showSection('predicciones');
   } else {
@@ -680,6 +689,7 @@ async function doRegister() {
   if (!telefono.trim()) return showMsg('authMsg', 'El teléfono es requerido', 'error');
   const r = await api('/api/register', {method:'POST', body: JSON.stringify({nombre, apodo, email, telefono, password})});
   if (r.ok) {
+    if (r.token) setToken(r.token);
     currentUser = { loggedIn: true, nombre: r.nombre, apodo: r.apodo, esAdmin: false };
     updateNav(currentUser);
     showSection('predicciones');
@@ -690,6 +700,7 @@ async function doRegister() {
 
 async function doLogout() {
   await api('/api/logout', {method:'POST'});
+  clearToken();
   currentUser = { loggedIn: false };
   updateNav(currentUser);
   showSection('auth');
