@@ -256,6 +256,7 @@
     </div>
     <div class="header-nav" id="headerNav">
       <button class="nav-btn" onclick="showSection('tabla')">🏆 Tabla</button>
+      <button class="nav-btn" onclick="showSection('resultados')">📊 Resultados</button>
       <button class="nav-btn active" onclick="showSection('predicciones')">⚽ Predicciones</button>
       <button class="nav-btn" id="adminNavBtn" style="display:none" onclick="showSection('admin')">⚙️ Admin</button>
       <span class="user-info" id="userInfo"></span>
@@ -462,6 +463,15 @@
     </div>
   </div>
 
+  <!-- RESULTADOS -->
+  <div class="section" id="section-resultados">
+    <div class="card" style="margin-bottom:12px;">
+      <h2>📊 Resultados del Mundial 2026</h2>
+      <p style="color:var(--text-light);font-size:0.88rem;">Resultados oficiales de todos los partidos jugados.</p>
+    </div>
+    <div id="resultadosContainer"><div class="loading">Cargando resultados...</div></div>
+  </div>
+
   <!-- ADMIN -->
   <div class="section" id="section-admin">
     <div class="card">
@@ -630,6 +640,7 @@ function showSection(name) {
   if (name === 'tabla') loadTabla();
   if (name === 'auth') loadTablaPublica();
   if (name === 'predicciones') loadPredicciones();
+  if (name === 'resultados') loadResultados();
   if (name === 'admin') loadAdmin();
 }
 
@@ -704,6 +715,78 @@ async function doLogout() {
   currentUser = { loggedIn: false };
   updateNav(currentUser);
   showSection('auth');
+}
+
+// RESULTADOS
+async function loadResultados() {
+  const partidos = await api('/api/partidos');
+  const completados = partidos.filter(p => p.completado);
+  const container = document.getElementById('resultadosContainer');
+
+  if (completados.length === 0) {
+    container.innerHTML = `<div class="card" style="text-align:center;padding:40px;">
+      <div style="font-size:3rem;margin-bottom:12px;">⏳</div>
+      <h3 style="color:var(--verde-dark);">Aún no hay resultados</h3>
+      <p style="color:var(--text-light);margin-top:8px;">Los resultados aparecerán aquí cuando inicien los partidos el <strong>11 de junio</strong>.</p>
+    </div>`;
+    return;
+  }
+
+  // Agrupar por fase y grupo
+  const FASES_ORDEN = ['Grupos','Ronda de 32','Octavos de Final','Cuartos de Final','Semifinales','Tercer Lugar','Final'];
+  const FASE_ICONS = {'Grupos':'⚽','Ronda de 32':'🔵','Octavos de Final':'🟡','Cuartos de Final':'🟠','Semifinales':'🔴','Tercer Lugar':'🥉','Final':'🏆'};
+  const GRUPOS_ORDEN = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F','Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L'];
+
+  const porFase = {};
+  completados.forEach(p => {
+    if (!porFase[p.fase]) porFase[p.fase] = {};
+    const key = p.grupo ? `Grupo ${p.grupo}` : p.fase;
+    if (!porFase[p.fase][key]) porFase[p.fase][key] = [];
+    porFase[p.fase][key].push(p);
+  });
+
+  // Ordenar grupos A-L
+  if (porFase['Grupos']) {
+    const sorted = {};
+    GRUPOS_ORDEN.forEach(k => { if (porFase['Grupos'][k]) sorted[k] = porFase['Grupos'][k]; });
+    porFase['Grupos'] = sorted;
+  }
+
+  let html = `<div style="margin-bottom:12px;background:#d4edda;border-radius:10px;padding:10px 16px;font-size:0.9rem;color:#155724;font-weight:600;">
+    ✅ ${completados.length} partido${completados.length!==1?'s':''} jugado${completados.length!==1?'s':''}
+  </div>`;
+
+  FASES_ORDEN.forEach(fase => {
+    if (!porFase[fase]) return;
+    const icon = FASE_ICONS[fase] || '⚽';
+    Object.entries(porFase[fase]).forEach(([grupo, ps]) => {
+      html += `<div class="grupo-title">${icon} ${grupo === fase ? fase : grupo}</div>`;
+      html += `<div class="card" style="padding:8px 16px;margin-bottom:12px;">`;
+      ps.forEach(p => {
+        const ganador = p.goles_local > p.goles_visitante ? 'local' : p.goles_visitante > p.goles_local ? 'visitante' : 'empate';
+        html += `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--border);">
+          <div style="text-align:right;font-weight:${ganador==='local'?'800':'600'};font-size:0.9rem;${ganador==='local'?'color:var(--verde-dark);':''}">
+            ${p.equipo_local}
+          </div>
+          <div style="text-align:center;">
+            <div style="background:var(--verde-dark);color:white;padding:6px 14px;border-radius:10px;font-size:1.3rem;font-weight:900;min-width:70px;">
+              ${p.goles_local} - ${p.goles_visitante}
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px;">
+              M${p.numero} · ${formatFecha(p.fecha)}
+            </div>
+            ${ganador==='empate'?'<div style="font-size:0.72rem;color:#856404;font-weight:700;margin-top:2px;">🤝 Empate</div>':''}
+          </div>
+          <div style="text-align:left;font-weight:${ganador==='visitante'?'800':'600'};font-size:0.9rem;${ganador==='visitante'?'color:var(--verde-dark);':''}">
+            ${p.equipo_visitante}
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  });
+
+  container.innerHTML = html;
 }
 
 // TABLA PÚBLICA (página inicial)
