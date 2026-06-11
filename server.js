@@ -290,6 +290,25 @@ app.post('/api/admin/usuarios/:id/reset-password', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// Ver predicciones de un usuario específico (admin)
+app.get('/api/admin/predicciones/:userId', requireAdmin, (req, res) => {
+  const { userId } = req.params;
+  const usuario = db.prepare('SELECT nombre, apodo FROM usuarios WHERE id = ?').get(userId);
+  if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const preds = db.prepare(`
+    SELECT p.goles_local, p.goles_visitante, p.puntos,
+           par.numero, par.fase, par.grupo, par.equipo_local, par.equipo_visitante,
+           par.fecha, par.goles_local as res_local, par.goles_visitante as res_visit, par.completado
+    FROM predicciones p
+    JOIN partidos par ON par.id = p.partido_id
+    WHERE p.usuario_id = ?
+    ORDER BY par.numero
+  `).all(userId);
+
+  res.json({ usuario, predicciones: preds });
+});
+
 // Exportar usuarios a CSV
 app.get('/api/admin/exportar-csv', requireAdmin, (req, res) => {
   const users = db.prepare('SELECT nombre, apodo, email, telefono, fecha_registro FROM usuarios WHERE es_admin = 0 ORDER BY fecha_registro DESC').all();

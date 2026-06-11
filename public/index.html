@@ -561,6 +561,15 @@
 
 </main>
 
+<!-- MODAL PREDICCIONES USUARIO -->
+<div id="modalPreds" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;padding:20px;">
+  <div style="background:white;max-width:700px;margin:0 auto;border-radius:16px;padding:24px;position:relative;">
+    <button onclick="document.getElementById('modalPreds').style.display='none'" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
+    <h2 id="modalPredsTitle" style="margin-bottom:16px;color:var(--verde-dark);font-size:1.1rem;"></h2>
+    <div id="modalPredsContent"></div>
+  </div>
+</div>
+
 <button class="save-floating hidden" id="saveFloatBtn" onclick="savePrediccionesAll()">
   💾 Guardar predicciones
 </button>
@@ -1151,6 +1160,7 @@ async function loadAdmin() {
       <td style="font-size:0.82rem;">${fecha}</td>
       <td>
         <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-sm" style="background:#6f42c1;color:white;padding:4px 8px;" onclick="verPredicciones(${u.id},'${u.apodo.replace(/'/g,"\\'")}')">👁️</button>
           <button class="btn btn-sm" style="background:#0d6efd;color:white;padding:4px 8px;" onclick="editarUsuario(${u.id},'${u.nombre.replace(/'/g,"\\'")}','${u.telefono||''}')">✏️</button>
           <button class="btn btn-sm" style="background:#fd7e14;color:white;padding:4px 8px;" onclick="resetPasswordAdmin(${u.id},'${u.nombre.replace(/'/g,"\\'")}')">🔑</button>
           <button class="btn btn-sm btn-danger" style="padding:4px 8px;" onclick="eliminarUsuario(${u.id},'${u.nombre.replace(/'/g,"\\'")}')">🗑️</button>
@@ -1164,6 +1174,66 @@ async function loadAdmin() {
     &nbsp;·&nbsp; ✏️ Editar &nbsp;·&nbsp; 🔑 Resetear contraseña &nbsp;·&nbsp; 🗑️ Eliminar
   </div>`;
   document.getElementById('usuariosContainer').innerHTML = uHtml;
+}
+
+async function verPredicciones(userId, apodo) {
+  document.getElementById('modalPredsTitle').textContent = `⚽ Predicciones de ${apodo}`;
+  document.getElementById('modalPredsContent').innerHTML = '<div class="loading">Cargando...</div>';
+  document.getElementById('modalPreds').style.display = '';
+
+  const data = await api(`/api/admin/predicciones/${userId}`);
+  if (!data.predicciones) {
+    document.getElementById('modalPredsContent').innerHTML = '<p style="color:var(--text-light)">Sin predicciones aún.</p>';
+    return;
+  }
+
+  const total = data.predicciones.length;
+  const puntos = data.predicciones.reduce((s, p) => s + (p.puntos || 0), 0);
+  const exactos = data.predicciones.filter(p => p.puntos === 3).length;
+  const empates = data.predicciones.filter(p => p.puntos === 2).length;
+  const ganador = data.predicciones.filter(p => p.puntos === 1).length;
+
+  let html = `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+    <span style="background:var(--verde);color:white;padding:4px 14px;border-radius:20px;font-weight:700;">🏆 ${puntos} pts</span>
+    <span style="background:#d4edda;color:#155724;padding:4px 14px;border-radius:20px;font-size:0.85rem;">🎯 ${exactos} exactos</span>
+    <span style="background:#d1ecf1;color:#0c5460;padding:4px 14px;border-radius:20px;font-size:0.85rem;">🤝 ${empates} empates</span>
+    <span style="background:#fff3cd;color:#856404;padding:4px 14px;border-radius:20px;font-size:0.85rem;">✓ ${ganador} ganadores</span>
+    <span style="background:#f0f0f0;color:#555;padding:4px 14px;border-radius:20px;font-size:0.85rem;">📝 ${total} predicciones</span>
+  </div>
+  <div style="overflow-x:auto;">
+  <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+    <thead><tr style="background:var(--verde);color:white;">
+      <th style="padding:8px;text-align:left;">M#</th>
+      <th style="padding:8px;text-align:left;">Partido</th>
+      <th style="padding:8px;text-align:center;">Predicción</th>
+      <th style="padding:8px;text-align:center;">Resultado</th>
+      <th style="padding:8px;text-align:center;">Pts</th>
+    </tr></thead><tbody>`;
+
+  data.predicciones.forEach((p, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#f9f9f9';
+    let ptsBadge = '';
+    if (p.completado) {
+      if (p.puntos === 3) ptsBadge = '<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:8px;font-weight:700;">🎯 3</span>';
+      else if (p.puntos === 2) ptsBadge = '<span style="background:#d1ecf1;color:#0c5460;padding:2px 8px;border-radius:8px;font-weight:700;">🤝 2</span>';
+      else if (p.puntos === 1) ptsBadge = '<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:8px;font-weight:700;">✓ 1</span>';
+      else ptsBadge = '<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:8px;font-weight:700;">✗ 0</span>';
+    } else {
+      ptsBadge = '<span style="color:#aaa;font-size:0.8rem;">pendiente</span>';
+    }
+    const resultado = p.completado ? `<strong>${p.res_local} - ${p.res_visit}</strong>` : '<span style="color:#aaa;">—</span>';
+
+    html += `<tr style="background:${bg};border-bottom:1px solid #eee;">
+      <td style="padding:7px 8px;font-weight:600;">M${p.numero}</td>
+      <td style="padding:7px 8px;">${p.equipo_local} vs ${p.equipo_visitante}</td>
+      <td style="padding:7px 8px;text-align:center;font-weight:700;">${p.goles_local} - ${p.goles_visitante}</td>
+      <td style="padding:7px 8px;text-align:center;">${resultado}</td>
+      <td style="padding:7px 8px;text-align:center;">${ptsBadge}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('modalPredsContent').innerHTML = html;
 }
 
 function exportarCSV() {
