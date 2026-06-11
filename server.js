@@ -455,3 +455,4 @@ app.listen(PORT, () => {
   startAutoResults();
   setInterval(checkRecordatorios, 60 * 60 * 1000); // cada hora
 });
+// deploy trigger Thu Jun 11 18:46:30 EDT 2026
