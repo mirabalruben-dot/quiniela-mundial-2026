@@ -35,15 +35,27 @@ function mapTeam(name) {
 }
 
 async function fetchFromAPI(status) {
-  const res = await fetch(`${API_URL}/fixtures?league=${LEAGUE_ID}&season=${SEASON}&status=${status}`, {
-    headers: {
-      'x-apisports-key': API_KEY,
-      'x-rapidapi-host': 'v3.football.api-sports.io'
+  // El plan gratuito no permite filtrar por season=2026, pero SÍ por fecha
+  // Buscamos los últimos 3 días para capturar partidos recientes
+  const results = [];
+  const today = new Date();
+  for (let i = 0; i <= 2; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const fecha = d.toISOString().split('T')[0];
+    const res = await fetch(`${API_URL}/fixtures?date=${fecha}`, {
+      headers: { 'x-apisports-key': API_KEY }
+    });
+    if (!res.ok) continue;
+    const data = await res.json();
+    const wc = (data.response || []).filter(f => f.league.id === LEAGUE_ID);
+    if (status === 'FT') {
+      results.push(...wc.filter(f => f.fixture.status.short === 'FT' || f.fixture.status.short === 'AET' || f.fixture.status.short === 'PEN'));
+    } else {
+      results.push(...wc.filter(f => f.fixture.status.short === 'NS'));
     }
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.response || [];
+  }
+  return results;
 }
 
 async function fetchFinishedMatches() {
